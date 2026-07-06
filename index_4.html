@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarineCalc — prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500&family=IBM+Plex+Sans+JP:wght@400;500&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#FFFFFF;
+  --panel:#F4F6F4;
+  --ink:#102A3D;
+  --ink-soft:#4C6572;
+  --line:#D7DEDE;
+  --line-strong:#AFC0C2;
+  --brass:#A9722F;
+  --brass-bg:#F2E4CF;
+  --signal:#2F8F5B;
+  --signal-bg:#E4F2E9;
+  --font-display:'Oswald','IBM Plex Sans KR','IBM Plex Sans JP',sans-serif;
+  --font-body:'IBM Plex Sans','IBM Plex Sans KR','IBM Plex Sans JP',sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--font-body);}
+.wrap{max-width:960px;margin:0 auto;padding:0 24px 80px;}
+header{padding:20px 0 0;border-bottom:1px solid var(--line);}
+.headbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-bottom:16px;}
+.wordmark{font-family:var(--font-display);font-weight:600;font-size:22px;letter-spacing:2px;color:var(--ink);}
+.wordmark span{color:var(--brass);}
+.controls{display:flex;gap:8px;align-items:center;}
+.pillgroup{display:flex;border:1px solid var(--line-strong);border-radius:6px;overflow:hidden;}
+.pillgroup button{
+  background:var(--page);border:none;color:var(--ink-soft);
+  font-family:var(--font-body);font-size:12px;font-weight:500;
+  padding:7px 12px;cursor:pointer;letter-spacing:0.5px;
+}
+.pillgroup button.active{background:var(--brass);color:#fff;}
+.hero{padding:48px 0 36px;text-align:center;}
+.hero h1{font-family:var(--font-display);font-weight:600;font-size:32px;color:var(--ink);margin:0 0 12px;letter-spacing:0.3px;}
+.hero p{color:var(--ink-soft);font-size:15px;max-width:520px;margin:0 auto 8px;line-height:1.6;}
+.hero .note{font-size:12px;color:var(--brass);margin-top:14px;}
+.hull-svg{margin:0 auto 8px;display:block;}
+.section-label{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:2px;
+  color:var(--brass);text-transform:uppercase;margin:0 0 14px;
+}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:56px;}
+.card{
+  border:1px solid var(--line);border-radius:6px;padding:16px;
+  background:var(--panel);cursor:pointer;transition:border-color 0.15s;
+}
+.card:hover{border-color:var(--brass);}
+.card .cat{font-family:var(--font-mono);font-size:10px;color:var(--brass);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.card .name{font-size:14px;font-weight:500;color:var(--ink);}
+.card .tag{
+  display:inline-block;margin-top:10px;font-size:10px;
+  padding:2px 8px;border-radius:10px;font-family:var(--font-mono);letter-spacing:0.5px;
+  background:var(--signal-bg);color:var(--signal);
+}
+.calc{
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:24px;margin-bottom:24px;
+}
+.calc h2{font-family:var(--font-display);font-weight:600;font-size:19px;color:var(--ink);margin:0 0 4px;}
+.calc .desc{font-size:13px;color:var(--ink-soft);margin:0 0 20px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:5px;}
+.field select, .field input{
+  width:100%;background:#fff;border:1px solid var(--line-strong);color:var(--ink);
+  font-family:var(--font-body);font-size:14px;padding:9px 10px;border-radius:4px;
+}
+.field select:focus, .field input:focus{outline:none;border-color:var(--brass);}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.plate{
+  margin-top:18px;background:#fff;border:1px solid var(--brass);border-radius:6px;
+  padding:16px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;
+}
+.plate .item{text-align:left;}
+.plate .item .l{font-size:10px;color:var(--brass);font-family:var(--font-mono);letter-spacing:1px;text-transform:uppercase;}
+.plate .item .v{font-family:var(--font-mono);font-size:20px;color:var(--ink);font-weight:600;margin-top:2px;}
+.hint{font-size:12px;color:var(--ink-soft);margin-top:10px;}
+table.ref{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px;}
+table.ref th, table.ref td{border:1px solid var(--line);padding:6px 8px;text-align:left;}
+table.ref th{background:#fff;color:var(--ink-soft);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;}
+footer{text-align:center;padding-top:20px;border-top:1px solid var(--line);}
+footer p{font-size:12px;color:var(--ink-soft);}
+.hub{background:var(--panel);border:1px solid var(--brass);border-radius:8px;padding:22px 24px;margin-bottom:32px;}
+.hub h2{font-family:var(--font-display);font-weight:600;font-size:18px;color:var(--ink);margin:0 0 4px;}
+.hub .desc{font-size:13px;color:var(--ink-soft);margin:0 0 16px;}
+.hubtabs{display:flex;gap:8px;margin-bottom:16px;}
+.hubtabs button{
+  background:#fff;border:1px solid var(--line-strong);color:var(--ink-soft);
+  font-family:var(--font-body);font-size:13px;font-weight:500;padding:8px 14px;
+  border-radius:6px;cursor:pointer;
+}
+.hubtabs button.active{background:var(--brass);color:#fff;border-color:var(--brass);}
+.dropzone{
+  border:2px dashed var(--line-strong);border-radius:8px;padding:32px 16px;text-align:center;
+  cursor:pointer;background:#fff;
+}
+.dropzone.drag{border-color:var(--brass);background:var(--brass-bg);}
+.dropzone p{margin:0;font-size:13px;color:var(--ink-soft);}
+.badge{
+  display:inline-block;font-size:10px;font-family:var(--font-mono);letter-spacing:0.5px;
+  padding:2px 8px;border-radius:10px;background:var(--brass-bg);color:var(--brass);margin-left:8px;
+}
+.applybar{display:flex;justify-content:flex-end;margin-top:14px;}
+.btn-brass{
+  background:var(--brass);color:#fff;border:none;border-radius:6px;
+  font-family:var(--font-body);font-size:13px;font-weight:500;padding:9px 18px;cursor:pointer;
+}
+.applied-msg{font-size:12px;color:var(--signal);margin-top:10px;text-align:right;}
+#calcSearch{
+  width:100%;background:#fff;border:1px solid var(--line-strong);color:var(--ink);
+  font-family:var(--font-body);font-size:14px;padding:10px 12px;border-radius:6px;margin-bottom:14px;
+}
+#calcSearch:focus{outline:none;border-color:var(--brass);}
+.adslot{
+  border:1px dashed var(--line-strong);border-radius:6px;padding:14px;margin:20px 0;
+  text-align:center;font-family:var(--font-mono);font-size:11px;letter-spacing:1px;
+  color:var(--ink-soft);text-transform:uppercase;background:var(--panel);
+}
+.card.hidden{display:none;}
+.navlink{font-family:var(--font-body);font-size:13px;color:var(--ink-soft);text-decoration:none;padding:7px 4px;}
+.navlink:hover{color:var(--brass);}
+.drawings-empty{
+  border:1px dashed var(--line-strong);border-radius:8px;padding:40px 20px;text-align:center;background:#fff;
+}
+.drawings-empty p{margin:0 0 6px;font-size:13px;color:var(--ink-soft);}
+.drawings-empty .credit{font-size:12px;color:var(--brass);margin-top:12px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="headbar">
+    <div class="wordmark">MARINE<span>CALC</span></div>
+    <div class="controls">
+      <a href="#drawings" class="navlink" data-i18n="nav_drawings">도면</a>
+      <div class="pillgroup" id="langGroup">
+        <button data-lang="ko" class="active">KO</button>
+        <button data-lang="en">EN</button>
+        <button data-lang="ja">JA</button>
+      </div>
+      <div class="pillgroup" id="unitGroup">
+        <button data-unit="metric" class="active" data-i18n="unit_metric">Metric</button>
+        <button data-unit="imperial" data-i18n="unit_imperial">Imperial</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <svg class="hull-svg" width="360" height="70" viewBox="0 0 360 70">
+    <line x1="0" y1="50" x2="360" y2="50" stroke="#AFC0C2" stroke-width="1" stroke-dasharray="4 4"/>
+    <path d="M20,48 L40,20 L280,20 Q320,20 340,48 L20,48 Z" fill="none" stroke="#102A3D" stroke-width="1.5"/>
+    <line x1="70" y1="20" x2="70" y2="48" stroke="#102A3D" stroke-width="0.75" opacity="0.35"/>
+    <line x1="140" y1="20" x2="140" y2="48" stroke="#102A3D" stroke-width="0.75" opacity="0.35"/>
+    <line x1="210" y1="20" x2="210" y2="48" stroke="#102A3D" stroke-width="0.75" opacity="0.35"/>
+    <line x1="280" y1="20" x2="280" y2="48" stroke="#102A3D" stroke-width="0.75" opacity="0.35"/>
+  </svg>
+  <h1 data-i18n="hero_title">해양 실무 계산기 모음</h1>
+  <p data-i18n="hero_sub">톤수, 도장, 복합소재, 배관 규격까지. 조선/보트제작 실무자를 위한 계산 도구입니다.</p>
+  <p class="note" data-i18n="hero_note">프로토타입 — 계산기는 계속 추가됩니다</p>
+</section>
+
+<div class="adslot" data-i18n="ad_placeholder">AD SLOT — hero banner</div>
+
+<div id="hubArea"></div>
+
+<p class="section-label" data-i18n="label_calculators">CALCULATORS</p>
+<input type="text" id="calcSearch" data-i18n-placeholder="search_placeholder" placeholder="계산기 검색 (예: 톤수, 페인트, 파이프)">
+<div class="grid" id="calcGrid"></div>
+
+<div class="adslot" data-i18n="ad_placeholder2">AD SLOT — between grid and results</div>
+
+<div id="calcArea"></div>
+
+<div class="adslot" data-i18n="ad_placeholder3">AD SLOT — footer banner</div>
+
+<section id="drawings" style="padding-top:8px;">
+  <p class="section-label" data-i18n="drawings_label">DRAWINGS</p>
+  <h2 style="font-family:var(--font-display);font-weight:600;font-size:19px;color:var(--ink);margin:0 0 4px;" data-i18n="drawings_title">도면 자료실</h2>
+  <p style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;" data-i18n="drawings_desc">참고용 GA 도면과 라인즈 플랜이 이곳에 추가될 예정입니다.</p>
+  <div class="drawings-empty">
+    <p data-i18n="drawings_empty">아직 등록된 도면이 없습니다 — 콘텐츠 준비 중입니다.</p>
+    <p class="credit" data-i18n="drawings_credit">Naval architecture: Ahn Dasol</p>
+  </div>
+</section>
+
+<footer>
+
+  <p data-i18n="footer_note">본 계산 결과는 참고용이며, 공식 서류를 대체하지 않습니다.</p>
+</footer>
+
+</div>
+
+<script>
+const i18n = {
+  ko:{
+    unit_metric:"미터법", unit_imperial:"야드파운드법",
+    hero_title:"해양 실무 계산기 모음",
+    hero_sub:"톤수, 도장, 복합소재, 배관 규격까지. 조선/보트제작 실무자를 위한 계산 도구입니다.",
+    hero_note:"프로토타입 — 계산기는 계속 추가됩니다",
+    label_calculators:"계산기", live:"사용가능",
+    ad_placeholder:"광고 영역 — 히어로 배너", ad_placeholder2:"광고 영역 — 계산기 목록 하단",
+    ad_placeholder3:"광고 영역 — 푸터 배너", search_placeholder:"계산기 검색 (예: 톤수, 페인트, 파이프)",
+    no_results:"검색 결과가 없습니다",
+    nav_drawings:"도면", drawings_label:"DRAWINGS",
+    drawings_title:"도면 자료실", drawings_desc:"참고용 GA 도면과 라인즈 플랜이 이곳에 추가될 예정입니다.",
+    drawings_empty:"아직 등록된 도면이 없습니다 — 콘텐츠 준비 중입니다.",
+    drawings_credit:"설계: 안다솔 (Naval Architecture)",
+    cat_power:"동력변환", cat_bilge:"빌지펌프", cat_vent:"환기", cat_electric:"전력량",
+    name_power:"동력/전기 단위변환", name_bilge:"빌지펌프 소요량", name_vent:"환기량/블로워", name_electric:"전력량/배터리",
+    pw_title:"동력 단위변환기 (kW/PS/HP) + kVA", pw_desc:"엔진 출력과 전기용량 단위를 변환합니다.",
+    pw_value:"값", pw_from:"기준 단위",
+    pw_kva_title:"kVA -> kW / 전류 변환", pw_pf:"역률 (PF)", pw_voltage:"전압 (V)",
+    pw_phase:"상(phase)", pw_single:"단상", pw_three:"3상",
+    pw_kw_out:"환산 kVA", pw_amp_out:"전류",
+    bp_title:"빌지펌프 소요량 계산기", bp_desc:"ABYC 권장치 또는 실제 침수량 기준으로 필요 용량을 계산합니다.",
+    bp_mode:"계산 방식", bp_mode_bracket:"ABYC 권장치 (선박길이 기준)", bp_mode_ingress:"침수량 기반 (정밀)",
+    bp_loa:"전장 LOA", bp_thruDia:"통수공 직경 (inch)", bp_depth:"흘수선 아래 깊이", bp_safety:"안전계수",
+    bp_result:"권장 펌프용량", bp_note:"출처: ABYC H-22 권장치(선체길이별 구간) 및 토리첼리 방정식(Q=C·A·√2gH) 기반 참고용 계산입니다.",
+    vt_title:"엔진룸 환기량/블로워 계산기", vt_desc:"Dave Gerr 공식 기준 엔진룸 자연환기 면적과 블로워 용량을 계산합니다.",
+    vt_hp:"주기관 마력 합계 (HP)", vt_genkw:"발전기 용량 합계 (kW)",
+    vt_area_out:"최소 자연환기 면적", vt_cfm_out:"최소 블로워 용량",
+    vt_note:"이 계산은 엔진 냉각용 환기 기준입니다. 가솔린 엔진의 법정 화재/폭발방지 빌지블로워(USCG 33 CFR 183.610)는 별도 공식이니 해당 규정을 직접 확인하세요.",
+    el_title:"전력량/배터리 용량 계산기", el_desc:"부하와 사용시간으로 필요 전력량과 배터리 용량(Ah)을 계산합니다.",
+    el_load:"부하 (W)", el_hours:"사용시간 (h)", el_voltage:"시스템 전압 (V)", el_reserve:"여유율 (%)",
+    el_wh_out:"소비전력량", el_ah_out:"권장 배터리 용량",
+    hub_title:"선박 제원 입력 허브", hub_desc:"도면을 올리거나 직접 입력하면 아래 계산기들에 자동으로 반영됩니다.",
+    hub_tab_upload:"도면 업로드 (AI 분석)", hub_tab_manual:"수동 입력",
+    hub_drop_text:"G/A 도면 파일을 여기로 드래그하거나 클릭해서 선택하세요 (PDF, PNG, JPG)",
+    hub_analyzing:"분석 중...", hub_demo_badge:"DEMO",
+    hub_demo_note:"이 프로토타입은 실제 AI 분석이 연결되어 있지 않습니다. 업로드하신 예시 도면(베타 6) 기준 데모 결과를 표시합니다.",
+    hub_loa:"전장 LOA (m)", hub_lbp:"수선간장 LBP (m)", hub_beam:"폭 (m)", hub_depth:"깊이 Depth (m)",
+    hub_draft:"흘수 Draft (m)", hub_disp:"배수량 (ton, 선택)", hub_material:"선체 재질", hub_vesselType:"선박 종류",
+    hub_apply:"계산기에 적용", hub_applied_msg:"적용되었습니다 — 아래 계산기에 반영됨",
+    hub_mapnote:"참고: 톤수 계산은 LOA, 흘수/속력/도장 계산은 LBP를 수선장(Lwl) 근사치로 사용합니다.",
+    cat_tonnage:"톤수", cat_paint:"도장", cat_metal:"중량", cat_draft:"흘수", cat_speed:"속력",
+    cat_voyage:"항해", cat_composite:"복합소재", cat_pipe:"배관", cat_prop:"프로펠러",
+    cat_wood:"목재", cat_anchor:"의장", cat_convert:"변환",
+    name_tonnage:"총톤수 (USCG)", name_paint:"보트 도장", name_metal:"철판 중량",
+    name_draft:"흘수/배수량", name_speed:"선체속도", name_voyage:"항해/연비",
+    name_composite:"유리섬유 레진", name_pipe:"배관 규격표", name_prop:"프로펠러 피치",
+    name_wood:"목재 중량", name_anchor:"의장수(EN)", name_convert:"인치-mm 변환",
+    footer_note:"본 계산 결과는 참고용이며, 공식 서류를 대체하지 않습니다.",
+    t_title:"총톤수 계산기 (USCG 간이측정법)", t_desc:"선체 형태와 치수를 입력하면 총톤수(GRT)와 순톤수(NRT)를 계산합니다.",
+    t_hull:"선체 형태", t_type:"선박 종류", t_l:"전장 (L)", t_b:"폭 (B)", t_d:"깊이 (D)",
+    t_grt:"총톤수 GRT", t_nrt:"순톤수 NRT",
+    p_title:"보트 도장 소요량 계산기", p_desc:"도장 부위별로 프라이머-톱코트 등 도장 스킴을 구분해서 소요량을 계산합니다.",
+    p_hull:"선형", p_area:"도장 부위",
+    p_area_bottom:"선저 (Bottom/Antifouling)", p_area_hull:"외판 (Hull/Topside)",
+    p_area_freeboard:"프리보드 (보트스트라이프)", p_area_super:"상부구조물 (Superstructure)",
+    p_lwl:"수선장 (LWL)", p_beam:"폭 (Beam)", p_draft:"흘수 (Draft)",
+    p_freeboardH:"평균 건현고 (Freeboard 높이)", p_curve:"곡면 보정계수",
+    p_stripeH:"스트라이프 높이", p_superArea:"상부구조물 면적 (직접입력)",
+    p_includeHighbuild:"하이빌드 프라이머(페어링) 포함",
+    p_step:"단계", p_coats:"코트수", p_coverage:"커버리지 (㎡/L)", p_liters:"소요량",
+    p_total:"총 소요량",
+    step_epoxyBarrier:"에폭시 배리어 프라이머", step_antifouling:"방오도료 (Antifouling)",
+    step_epoxyPrimer:"에폭시 프라이머", step_highbuild:"하이빌드 프라이머 (페어링)",
+    step_urethane:"우레탄 탑코트 (Gloss)",
+    m_title:"철판 중량 계산기", m_desc:"재질과 치수를 입력하면 판재 중량을 계산합니다.",
+    m_material:"재질", lbl_l:"길이", lbl_w:"폭", lbl_t:"두께", lbl_qty:"수량", lbl_weight:"중량",
+    bottom:"선저 (Bottom)", topside:"외판 (Topside)",
+    spray:"스프레이", brush:"붓/롤러", immersion:"침지",
+    engine_diesel:"디젤 (Diesel)", engine_gasoline:"가솔린 (Gasoline)", engine_battery:"리튬배터리 (전기)",
+    prop_outboard:"아웃보드", prop_sterndrive:"스턴드라이브(I/O)", prop_inboard:"인보드(직결)", prop_inboard_shaft:"인보드(샤프트)",
+    v_engine:"주기관 종류", v_prop:"추진방식",
+    v_rateMode:"연료소모율 입력방식", v_rateMode_direct:"실측값 직접입력", v_rateMode_est:"선체 제원으로 추정",
+    v_admiralty:"애드머럴티 계수 C", v_particulars:"선박 제원 (참고용 기록)",
+    v_loa:"전장 LOA (m)", v_dispRef:"배수량 (ton)",
+    v_battCap:"배터리 용량 (kWh)", v_battDraw:"평균 소비전력 (kW)", v_elecPrice:"전기단가 (원/kWh)",
+    v_energy:"소비전력량", v_warnBatt:"주의: 배터리 용량으로 항속 불가능한 거리입니다",
+    v_estNote:"참고: 애드머럴티 계수법 개략추정치이며 실측값보다 부정확할 수 있습니다.",
+    d_title:"흘수 기반 배수량 계산기", d_desc:"Cb법으로 배수량을 추정합니다.",
+    d_lwl:"수선장 (Lwl)", d_beam:"폭 (B)", d_draft:"흘수 (T)", d_cb:"블록계수 Cb", d_density:"해수밀도 (t/㎥)",
+    d_result:"배수량",
+    hs_title:"선체속도 계산기", hs_desc:"수선장으로 이론 최대 배수형 속도를 계산합니다.",
+    hs_lwl:"수선장 (Lwl)", hs_result:"이론 선체속도",
+    v_title:"항해거리/연료 계산기", v_desc:"주기관·추진방식과 선박 제원을 반영해 항해시간, 연료(또는 전력) 소모량과 비용을 계산합니다.",
+    v_dist:"항해거리 (해리)", v_speed:"속력 (knots)", v_rate:"연료소모율 (L/hr)", v_price:"단가 (원/L)",
+    v_time:"항해시간", v_fuel:"연료소모량", v_cost:"총 비용",
+    c_title:"유리섬유 레진 소요량 계산기", c_desc:"섬유 종류와 면적을 입력하면 필요한 레진량을 계산합니다.",
+    c_fiber:"섬유 종류", c_length:"길이", c_width:"폭", c_layers:"레이어 수", c_fabric:"섬유 단위중량 (g/㎡)",
+    c_result:"레진 소요량",
+    pipe_title:"배관 규격 조회표", pipe_desc:"표준과 호칭경을 선택하면 실외경과 두께를 조회합니다.",
+    pipe_standard:"표준", pipe_size:"호칭경", pipe_od:"실외경", pipe_t40:"SCH40 두께", pipe_t80:"SCH80 두께",
+    pp_title:"프로펠러 피치/속도 계산기", pp_desc:"피치, RPM, 기어비, 슬립을 입력하면 이론/실속도를 계산합니다 (단위: inch, knots 고정).",
+    pp_pitch:"피치 (inch)", pp_dia:"지름 (inch)", pp_rpm:"RPM", pp_gear:"기어비", pp_slip:"슬립 (%)",
+    pp_theo:"이론속도", pp_actual:"실속도",
+    w_title:"목재 중량 계산기", w_desc:"재종과 치수를 입력하면 중량을 계산합니다.",
+    w_species:"재종",
+    a_title:"의장수(EN) 계산기", a_desc:"IACS UR A1 공식으로 의장수를 계산합니다. (앵커/체인 규격표는 별도 확인 필요)",
+    a_disp:"배수량 Δ (ton)", a_b:"폭 B (m)", a_h:"유효높이 H (m)", a_a:"측면투영면적 A (㎡)", a_en:"의장수 EN",
+    a_note:"EN 산정 후 앵커중량/체인직경은 IACS UR A1 Table 1 또는 KR 강선규칙에서 조회하세요.",
+    im_title:"인치-mm 변환기", im_desc:"양방향으로 자유롭게 변환합니다.",
+    im_inch:"inch", im_mm:"mm"
+  },
+  en:{
+    unit_metric:"Metric", unit_imperial:"Imperial",
+    hero_title:"Marine engineering calculators",
+    hero_sub:"Tonnage, paint, composites, pipe specs — practical tools for boatbuilders and marine engineers.",
+    hero_note:"Prototype — more calculators coming",
+    label_calculators:"Calculators", live:"Available",
+    ad_placeholder:"Ad slot — hero banner", ad_placeholder2:"Ad slot — below calculator grid",
+    ad_placeholder3:"Ad slot — footer banner", search_placeholder:"Search calculators (e.g. tonnage, paint, pipe)",
+    no_results:"No calculators match your search",
+    nav_drawings:"Drawings", drawings_label:"DRAWINGS",
+    drawings_title:"Drawing library", drawings_desc:"Reference GA drawings and lines plans will be added here.",
+    drawings_empty:"No drawings yet — content coming soon.",
+    drawings_credit:"Naval architecture: Ahn Dasol",
+    cat_power:"Power", cat_bilge:"Bilge pump", cat_vent:"Ventilation", cat_electric:"Electrical",
+    name_power:"Power/electrical unit converter", name_bilge:"Bilge pump sizing", name_vent:"Ventilation/blower", name_electric:"Electrical load/battery",
+    pw_title:"Power converter (kW/PS/HP) + kVA", pw_desc:"Convert engine power and electrical capacity units.",
+    pw_value:"Value", pw_from:"From unit",
+    pw_kva_title:"kVA -> kW / current", pw_pf:"Power factor (PF)", pw_voltage:"Voltage (V)",
+    pw_phase:"Phase", pw_single:"Single phase", pw_three:"Three phase",
+    pw_kw_out:"Converted kVA", pw_amp_out:"Current",
+    bp_title:"Bilge pump sizing calculator", bp_desc:"Estimates required capacity using ABYC guidance or measured ingress rate.",
+    bp_mode:"Method", bp_mode_bracket:"ABYC guideline (by boat length)", bp_mode_ingress:"Ingress-based (precise)",
+    bp_loa:"Length overall LOA", bp_thruDia:"Through-hull diameter (inch)", bp_depth:"Depth below waterline", bp_safety:"Safety factor",
+    bp_result:"Recommended pump capacity", bp_note:"Source: ABYC H-22 length-based guideline and Torricelli's equation (Q=C·A·sqrt(2gH)); reference only.",
+    vt_title:"Engine room ventilation/blower calculator", vt_desc:"Calculates minimum natural vent area and blower CFM using Dave Gerr's formulas.",
+    vt_hp:"Total main engine HP", vt_genkw:"Total generator capacity (kW)",
+    vt_area_out:"Min. natural vent area", vt_cfm_out:"Min. blower capacity",
+    vt_note:"This covers engine cooling ventilation. Gasoline engines also require a separate mandatory fire/explosion bilge blower per USCG 33 CFR 183.610 - check that regulation directly.",
+    el_title:"Electrical load/battery capacity calculator", el_desc:"Calculates energy use and battery capacity (Ah) from load and duration.",
+    el_load:"Load (W)", el_hours:"Duration (h)", el_voltage:"System voltage (V)", el_reserve:"Reserve margin (%)",
+    el_wh_out:"Energy used", el_ah_out:"Recommended battery capacity",
+    hub_title:"Vessel particulars hub", hub_desc:"Upload a drawing or enter values manually to auto-fill the calculators below.",
+    hub_tab_upload:"Upload drawing (AI analysis)", hub_tab_manual:"Manual entry",
+    hub_drop_text:"Drag a G/A drawing here or click to select (PDF, PNG, JPG)",
+    hub_analyzing:"Analyzing...", hub_demo_badge:"DEMO",
+    hub_demo_note:"This prototype has no real AI analysis wired up. Showing demo results based on the sample drawing (Beta 6) you uploaded.",
+    hub_loa:"Length overall LOA (m)", hub_lbp:"Length between perpendiculars LBP (m)", hub_beam:"Beam (m)", hub_depth:"Depth (m)",
+    hub_draft:"Draft (m)", hub_disp:"Displacement (ton, optional)", hub_material:"Hull material", hub_vesselType:"Vessel type",
+    hub_apply:"Apply to calculators", hub_applied_msg:"Applied — reflected in the calculators below",
+    hub_mapnote:"Note: tonnage uses LOA; draft/speed/paint calculators use LBP as an approximation of waterline length.",
+    cat_tonnage:"Tonnage", cat_paint:"Paint", cat_metal:"Weight", cat_draft:"Draft", cat_speed:"Speed",
+    cat_voyage:"Voyage", cat_composite:"Composite", cat_pipe:"Pipe", cat_prop:"Propeller",
+    cat_wood:"Wood", cat_anchor:"Equipment", cat_convert:"Convert",
+    name_tonnage:"Gross tonnage (USCG)", name_paint:"Boat paint", name_metal:"Sheet metal weight",
+    name_draft:"Draft/displacement", name_speed:"Hull speed", name_voyage:"Voyage & fuel",
+    name_composite:"Fiberglass resin", name_pipe:"Pipe size chart", name_prop:"Propeller pitch",
+    name_wood:"Wood weight", name_anchor:"Equipment number (EN)", name_convert:"Inch-mm converter",
+    footer_note:"Results are estimates for reference only, not a substitute for official documentation.",
+    t_title:"Gross tonnage calculator (USCG simplified)", t_desc:"Enter hull type and dimensions to calculate gross and net tonnage.",
+    t_hull:"Hull type", t_type:"Vessel type", t_l:"Length (L)", t_b:"Breadth (B)", t_d:"Depth (D)",
+    t_grt:"Gross tonnage", t_nrt:"Net tonnage",
+    p_title:"Boat paint quantity calculator", p_desc:"Estimates quantity by coating area, using a primer-to-topcoat scheme per area.",
+    p_hull:"Hull type", p_area:"Coating area",
+    p_area_bottom:"Bottom (Antifouling)", p_area_hull:"Hull (Topside)",
+    p_area_freeboard:"Freeboard (boot stripe)", p_area_super:"Superstructure",
+    p_lwl:"Waterline length", p_beam:"Beam", p_draft:"Draft",
+    p_freeboardH:"Average freeboard height", p_curve:"Curvature factor",
+    p_stripeH:"Stripe height", p_superArea:"Superstructure area (direct input)",
+    p_includeHighbuild:"Include high-build primer (fairing)",
+    p_step:"Step", p_coats:"Coats", p_coverage:"Coverage (m2/L)", p_liters:"Quantity",
+    p_total:"Total quantity",
+    step_epoxyBarrier:"Epoxy barrier primer", step_antifouling:"Antifouling topcoat",
+    step_epoxyPrimer:"Epoxy primer", step_highbuild:"High-build primer (fairing)",
+    step_urethane:"Urethane topcoat (gloss)",
+    m_title:"Sheet metal weight calculator", m_desc:"Enter material and dimensions to calculate plate weight.",
+    m_material:"Material", lbl_l:"Length", lbl_w:"Width", lbl_t:"Thickness", lbl_qty:"Quantity", lbl_weight:"Weight",
+    bottom:"Bottom", topside:"Topside",
+    spray:"Spray", brush:"Brush/roller", immersion:"Immersion",
+    engine_diesel:"Diesel", engine_gasoline:"Gasoline", engine_battery:"Lithium battery (electric)",
+    prop_outboard:"Outboard", prop_sterndrive:"Sterndrive (I/O)", prop_inboard:"Inboard (direct)", prop_inboard_shaft:"Inboard (shaft)",
+    v_engine:"Main engine type", v_prop:"Propulsion type",
+    v_rateMode:"Fuel rate input mode", v_rateMode_direct:"Enter measured value", v_rateMode_est:"Estimate from hull particulars",
+    v_admiralty:"Admiralty coefficient C", v_particulars:"Vessel particulars (reference log)",
+    v_loa:"Length overall (m)", v_dispRef:"Displacement (ton)",
+    v_battCap:"Battery capacity (kWh)", v_battDraw:"Average power draw (kW)", v_elecPrice:"Electricity price (per kWh)",
+    v_energy:"Energy used", v_warnBatt:"Warning: distance exceeds battery range",
+    v_estNote:"Note: Admiralty-coefficient estimate is a rough approximation, less reliable than a measured rate.",
+    d_title:"Draft-based displacement calculator", d_desc:"Estimates displacement using the block coefficient (Cb) method.",
+    d_lwl:"Waterline length (Lwl)", d_beam:"Beam (B)", d_draft:"Draft (T)", d_cb:"Block coefficient Cb", d_density:"Water density (t/m3)",
+    d_result:"Displacement",
+    hs_title:"Hull speed calculator", hs_desc:"Calculates theoretical maximum displacement-hull speed from waterline length.",
+    hs_lwl:"Waterline length (Lwl)", hs_result:"Theoretical hull speed",
+    v_title:"Voyage distance/fuel calculator", v_desc:"Accounts for engine and propulsion type plus vessel particulars to estimate voyage time, energy use and cost.",
+    v_dist:"Distance (nm)", v_speed:"Speed (knots)", v_rate:"Fuel rate (L/hr)", v_price:"Price (per L)",
+    v_time:"Voyage time", v_fuel:"Fuel used", v_cost:"Total cost",
+    c_title:"Fiberglass resin quantity calculator", c_desc:"Enter fiber type and area to estimate resin needed.",
+    c_fiber:"Fiber type", c_length:"Length", c_width:"Width", c_layers:"Layers", c_fabric:"Fabric weight (g/m2)",
+    c_result:"Resin needed",
+    pipe_title:"Pipe size lookup table", pipe_desc:"Select a standard and nominal size to look up OD and wall thickness.",
+    pipe_standard:"Standard", pipe_size:"Nominal size", pipe_od:"Outer diameter", pipe_t40:"SCH40 thickness", pipe_t80:"SCH80 thickness",
+    pp_title:"Propeller pitch/speed calculator", pp_desc:"Enter pitch, RPM, gear ratio and slip for theoretical/actual speed (units fixed to inch, knots).",
+    pp_pitch:"Pitch (inch)", pp_dia:"Diameter (inch)", pp_rpm:"RPM", pp_gear:"Gear ratio", pp_slip:"Slip (%)",
+    pp_theo:"Theoretical speed", pp_actual:"Actual speed",
+    w_title:"Wood weight calculator", w_desc:"Enter species and dimensions to calculate weight.",
+    w_species:"Species",
+    a_title:"Equipment number (EN) calculator", a_desc:"Calculates EN per IACS UR A1. (Check anchor/chain tables separately)",
+    a_disp:"Displacement Δ (ton)", a_b:"Breadth B (m)", a_h:"Effective height H (m)", a_a:"Profile area A (m2)", a_en:"Equipment number EN",
+    a_note:"After computing EN, look up anchor mass/chain diameter in IACS UR A1 Table 1 or your class society rules.",
+    im_title:"Inch-mm converter", im_desc:"Converts freely in both directions.",
+    im_inch:"inch", im_mm:"mm"
+  },
+  ja:{
+    unit_metric:"メートル法", unit_imperial:"ヤードポンド法",
+    hero_title:"船舶実務計算ツール集",
+    hero_sub:"トン数、塗装、複合材、配管規格まで。造船・ボート製作の実務者向け計算ツールです。",
+    hero_note:"プロトタイプ — 計算機は順次追加されます",
+    label_calculators:"計算機", live:"利用可能",
+    ad_placeholder:"広告枠 — ヒーローバナー", ad_placeholder2:"広告枠 — 計算機一覧下部",
+    ad_placeholder3:"広告枠 — フッターバナー", search_placeholder:"計算機を検索 (例: トン数, 塗装, 配管)",
+    no_results:"該当する計算機がありません",
+    nav_drawings:"図面", drawings_label:"DRAWINGS",
+    drawings_title:"図面資料室", drawings_desc:"参考用GA図面とラインズプランがここに追加される予定です。",
+    drawings_empty:"まだ登録された図面がありません — コンテンツ準備中です。",
+    drawings_credit:"設計: アン・ダソル (Naval Architecture)",
+    cat_power:"動力変換", cat_bilge:"ビルジポンプ", cat_vent:"換気", cat_electric:"電力量",
+    name_power:"動力/電気単位変換", name_bilge:"ビルジポンプ必要量", name_vent:"換気量/ブロワー", name_electric:"電力量/バッテリー",
+    pw_title:"動力単位変換機 (kW/PS/HP) + kVA", pw_desc:"エンジン出力と電気容量の単位を変換します。",
+    pw_value:"値", pw_from:"基準単位",
+    pw_kva_title:"kVA -> kW / 電流変換", pw_pf:"力率 (PF)", pw_voltage:"電圧 (V)",
+    pw_phase:"相", pw_single:"単相", pw_three:"三相",
+    pw_kw_out:"換算kVA", pw_amp_out:"電流",
+    bp_title:"ビルジポンプ必要量計算機", bp_desc:"ABYC推奨値または実際の浸水量基準で必要容量を計算します。",
+    bp_mode:"計算方式", bp_mode_bracket:"ABYC推奨値(船長基準)", bp_mode_ingress:"浸水量基準(精密)",
+    bp_loa:"全長 LOA", bp_thruDia:"通水口直径 (inch)", bp_depth:"喫水線下深さ", bp_safety:"安全係数",
+    bp_result:"推奨ポンプ容量", bp_note:"出典: ABYC H-22推奨値(船長区間別)およびトリチェリの方程式(Q=C・A・√2gH)基準の参考計算です。",
+    vt_title:"機関室換気量/ブロワー計算機", vt_desc:"Dave Gerr公式基準で機関室自然換気面積とブロワー容量を計算します。",
+    vt_hp:"主機関馬力合計 (HP)", vt_genkw:"発電機容量合計 (kW)",
+    vt_area_out:"最小自然換気面積", vt_cfm_out:"最小ブロワー容量",
+    vt_note:"この計算はエンジン冷却用換気基準です。ガソリンエンジンの法定防爆ビルジブロワー(USCG 33 CFR 183.610)は別の公式なので、該当規定を直接確認してください。",
+    el_title:"電力量/バッテリー容量計算機", el_desc:"負荷と使用時間から必要電力量とバッテリー容量(Ah)を計算します。",
+    el_load:"負荷 (W)", el_hours:"使用時間 (h)", el_voltage:"システム電圧 (V)", el_reserve:"余裕率 (%)",
+    el_wh_out:"消費電力量", el_ah_out:"推奨バッテリー容量",
+    hub_title:"船舶諸元入力ハブ", hub_desc:"図面をアップロードするか直接入力すると、下の計算機に自動反映されます。",
+    hub_tab_upload:"図面アップロード (AI分析)", hub_tab_manual:"手動入力",
+    hub_drop_text:"G/A図面ファイルをここにドラッグ、またはクリックして選択 (PDF, PNG, JPG)",
+    hub_analyzing:"分析中...", hub_demo_badge:"DEMO",
+    hub_demo_note:"このプロトタイプには実際のAI分析は接続されていません。アップロードされたサンプル図面(ベータ6)に基づくデモ結果を表示します。",
+    hub_loa:"全長 LOA (m)", hub_lbp:"垂線間長 LBP (m)", hub_beam:"幅 (m)", hub_depth:"深さ Depth (m)",
+    hub_draft:"喫水 Draft (m)", hub_disp:"排水量 (ton, 任意)", hub_material:"船体材質", hub_vesselType:"船舶種類",
+    hub_apply:"計算機に適用", hub_applied_msg:"適用されました — 下記計算機に反映済み",
+    hub_mapnote:"参考: トン数計算はLOA、喫水/速力/塗装計算はLBPを水線長(Lwl)近似値として使用します。",
+    cat_tonnage:"トン数", cat_paint:"塗装", cat_metal:"重量", cat_draft:"喫水", cat_speed:"速力",
+    cat_voyage:"航海", cat_composite:"複合材", cat_pipe:"配管", cat_prop:"プロペラ",
+    cat_wood:"木材", cat_anchor:"艤装", cat_convert:"変換",
+    name_tonnage:"総トン数 (USCG)", name_paint:"ボート塗装", name_metal:"鋼板重量",
+    name_draft:"喫水/排水量", name_speed:"船体速力", name_voyage:"航海/燃費",
+    name_composite:"ガラス繊維樹脂", name_pipe:"配管規格表", name_prop:"プロペラピッチ",
+    name_wood:"木材重量", name_anchor:"艤装数(EN)", name_convert:"インチ-mm変換",
+    footer_note:"計算結果は参考値であり、正式書類の代わりにはなりません。",
+    t_title:"総トン数計算機 (USCG簡易測定法)", t_desc:"船型と寸法を入力すると総トン数(GRT)と純トン数(NRT)を計算します。",
+    t_hull:"船型", t_type:"船舶種類", t_l:"全長 (L)", t_b:"幅 (B)", t_d:"深さ (D)",
+    t_grt:"総トン数", t_nrt:"純トン数",
+    p_title:"ボート塗装必要量計算機", p_desc:"塗装部位ごとにプライマー〜トップコートのスキームで必要量を計算します。",
+    p_hull:"船型", p_area:"塗装部位",
+    p_area_bottom:"船底 (防汚/Antifouling)", p_area_hull:"外板 (Hull/Topside)",
+    p_area_freeboard:"フリーボード (ボートストライプ)", p_area_super:"上部構造物 (Superstructure)",
+    p_lwl:"水線長", p_beam:"幅", p_draft:"喫水",
+    p_freeboardH:"平均乾舷高さ", p_curve:"曲面補正係数",
+    p_stripeH:"ストライプ高さ", p_superArea:"上部構造物面積(直接入力)",
+    p_includeHighbuild:"ハイビルドプライマー(フェアリング)を含む",
+    p_step:"段階", p_coats:"塗装回数", p_coverage:"塗布量 (㎡/L)", p_liters:"必要量",
+    p_total:"合計必要量",
+    step_epoxyBarrier:"エポキシバリアプライマー", step_antifouling:"防汚塗料(Antifouling)",
+    step_epoxyPrimer:"エポキシプライマー", step_highbuild:"ハイビルドプライマー(フェアリング)",
+    step_urethane:"ウレタントップコート(グロス)",
+    m_title:"鋼板重量計算機", m_desc:"材質と寸法を入力すると板材の重量を計算します。",
+    m_material:"材質", lbl_l:"長さ", lbl_w:"幅", lbl_t:"厚さ", lbl_qty:"数量", lbl_weight:"重量",
+    bottom:"船底", topside:"外板",
+    spray:"スプレー", brush:"刷毛/ローラー", immersion:"浸漬",
+    engine_diesel:"ディーゼル", engine_gasoline:"ガソリン", engine_battery:"リチウム電池(電気)",
+    prop_outboard:"アウトボード", prop_sterndrive:"スタンドライブ(I/O)", prop_inboard:"インボード(直結)", prop_inboard_shaft:"インボード(シャフト)",
+    v_engine:"主機関種類", v_prop:"推進方式",
+    v_rateMode:"燃料消費率入力方式", v_rateMode_direct:"実測値を直接入力", v_rateMode_est:"船体諸元から推定",
+    v_admiralty:"アドミラルティ係数 C", v_particulars:"船舶諸元(記録用参考)",
+    v_loa:"全長 LOA (m)", v_dispRef:"排水量 (ton)",
+    v_battCap:"バッテリー容量 (kWh)", v_battDraw:"平均消費電力 (kW)", v_elecPrice:"電気料金 (/kWh)",
+    v_energy:"消費電力量", v_warnBatt:"注意: バッテリー容量では航続不可能な距離です",
+    v_estNote:"参考: アドミラルティ係数法は概算値で、実測値より不正確な場合があります。",
+    d_title:"喫水基準排水量計算機", d_desc:"Cb法で排水量を推定します。",
+    d_lwl:"水線長 (Lwl)", d_beam:"幅 (B)", d_draft:"喫水 (T)", d_cb:"方形係数 Cb", d_density:"海水密度 (t/m3)",
+    d_result:"排水量",
+    hs_title:"船体速力計算機", hs_desc:"水線長から理論排水型最大速力を計算します。",
+    hs_lwl:"水線長 (Lwl)", hs_result:"理論船体速力",
+    v_title:"航海距離/燃料計算機", v_desc:"主機関・推進方式と船舶諸元を反映して航海時間、燃料(または電力)消費量と費用を計算します。",
+    v_dist:"航海距離 (海里)", v_speed:"速力 (knots)", v_rate:"燃料消費率 (L/hr)", v_price:"単価 (/L)",
+    v_time:"航海時間", v_fuel:"燃料消費量", v_cost:"総費用",
+    c_title:"ガラス繊維樹脂必要量計算機", c_desc:"繊維種類と面積を入力すると必要な樹脂量を計算します。",
+    c_fiber:"繊維種類", c_length:"長さ", c_width:"幅", c_layers:"層数", c_fabric:"繊維単位重量 (g/m2)",
+    c_result:"樹脂必要量",
+    pipe_title:"配管規格照会表", pipe_desc:"規格と呼び径を選択すると実外径と厚さを照会します。",
+    pipe_standard:"規格", pipe_size:"呼び径", pipe_od:"実外径", pipe_t40:"SCH40厚さ", pipe_t80:"SCH80厚さ",
+    pp_title:"プロペラピッチ/速力計算機", pp_desc:"ピッチ、RPM、ギア比、スリップを入力すると理論/実速力を計算します(単位はinch、knots固定)。",
+    pp_pitch:"ピッチ (inch)", pp_dia:"直径 (inch)", pp_rpm:"RPM", pp_gear:"ギア比", pp_slip:"スリップ (%)",
+    pp_theo:"理論速力", pp_actual:"実速力",
+    w_title:"木材重量計算機", w_desc:"樹種と寸法を入力すると重量を計算します。",
+    w_species:"樹種",
+    a_title:"艤装数(EN)計算機", a_desc:"IACS UR A1公式で艤装数を計算します。(アンカー/チェーン規格表は別途確認要)",
+    a_disp:"排水量 Δ (ton)", a_b:"幅 B (m)", a_h:"有効高さ H (m)", a_a:"側面投影面積 A (m2)", a_en:"艤装数 EN",
+    a_note:"EN算定後、アンカー質量/チェーン径はIACS UR A1 Table 1またはKR鋼船規則で照会してください。",
+    im_title:"インチ-mm変換機", im_desc:"双方向に自由に変換します。",
+    im_inch:"inch", im_mm:"mm"
+  }
+};
+
+let lang = "ko";
+let unit = "metric";
+
+function t(key){ return i18n[lang][key] || key; }
+
+function applyI18n(){
+  document.querySelectorAll("[data-i18n]").forEach(el=>{
+    el.textContent = t(el.getAttribute("data-i18n"));
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{
+    el.placeholder = t(el.getAttribute("data-i18n-placeholder"));
+  });
+  renderHub();
+  renderGrid();
+  renderTonnage(); renderPaint(); renderMetal(); renderDraft(); renderSpeed();
+  renderVoyage(); renderComposite(); renderPipe(); renderProp(); renderWood(); renderAnchor(); renderConvert();
+  renderPower(); renderBilge(); renderVent(); renderElectric();
+  setupSearch();
+}
+
+function setupSearch(){
+  const input = document.getElementById("calcSearch");
+  if(!input) return;
+  input.value = "";
+  input.oninput = ()=>{
+    const q = input.value.trim().toLowerCase();
+    document.querySelectorAll("#calcGrid .card").forEach(card=>{
+      const text = card.textContent.toLowerCase();
+      card.classList.toggle("hidden", q!=="" && !text.includes(q));
+    });
+  };
+}
+
+document.getElementById("langGroup").addEventListener("click", e=>{
+  const btn = e.target.closest("button"); if(!btn) return;
+  lang = btn.getAttribute("data-lang");
+  document.querySelectorAll("#langGroup button").forEach(b=>b.classList.toggle("active", b===btn));
+  applyI18n();
+});
+document.getElementById("unitGroup").addEventListener("click", e=>{
+  const btn = e.target.closest("button"); if(!btn) return;
+  unit = btn.getAttribute("data-unit");
+  document.querySelectorAll("#unitGroup button").forEach(b=>b.classList.toggle("active", b===btn));
+  applyI18n();
+});
+
+const CALC_LIST = [
+  ["cat_tonnage","name_tonnage","calc-tonnage"],
+  ["cat_paint","name_paint","calc-paint"],
+  ["cat_metal","name_metal","calc-metal"],
+  ["cat_draft","name_draft","calc-draft"],
+  ["cat_speed","name_speed","calc-speed"],
+  ["cat_voyage","name_voyage","calc-voyage"],
+  ["cat_composite","name_composite","calc-composite"],
+  ["cat_pipe","name_pipe","calc-pipe"],
+  ["cat_prop","name_prop","calc-prop"],
+  ["cat_wood","name_wood","calc-wood"],
+  ["cat_anchor","name_anchor","calc-anchor"],
+  ["cat_convert","name_convert","calc-convert"],
+  ["cat_power","name_power","calc-power"],
+  ["cat_bilge","name_bilge","calc-bilge"],
+  ["cat_vent","name_vent","calc-vent"],
+  ["cat_electric","name_electric","calc-electric"]
+];
+
+function renderGrid(){
+  const grid = document.getElementById("calcGrid");
+  let html = "";
+  CALC_LIST.forEach(([cat,name,anchor])=>{
+    html += `<div class="card" onclick="document.getElementById('${anchor}').scrollIntoView({behavior:'smooth'})">
+      <div class="cat">${t(cat)}</div><div class="name">${t(name)}</div>
+      <div class="tag">${t("live")}</div></div>`;
+  });
+  grid.innerHTML = html;
+}
+
+function fieldNum(id, label, value, step){
+  return `<div class="field"><label>${label}</label><input type="number" id="${id}" value="${value}" step="${step||"0.1"}"></div>`;
+}
+function replaceCalc(id, newEl){
+  const area = document.getElementById("calcArea");
+  const existing = document.getElementById(id);
+  if(existing){ area.replaceChild(newEl, existing); } else { area.appendChild(newEl); }
+}
+
+function mToDisp(v){ return unit==="metric" ? v : v*3.28084; }
+function dispToM(v){ return unit==="metric" ? v : v/3.28084; }
+function ftToDisp(v){ return unit==="metric" ? v*0.3048 : v; }
+function dispToFt(v){ return unit==="metric" ? v/0.3048 : v; }
+function lenUnitLabel(){ return unit==="metric" ? "m" : "ft"; }
+function mmToDisp(v){ return unit==="metric" ? v : v/25.4; }
+function dispToMm(v){ return unit==="metric" ? v : v*25.4; }
+function mmUnitLabel(){ return unit==="metric" ? "mm" : "in"; }
+function kgToDisp(v){ return unit==="metric" ? v : v*2.20462; }
+function kgUnitLabel(){ return unit==="metric" ? "kg" : "lb"; }
+function lToDisp(v){ return unit==="metric" ? v : v*0.264172; }
+function lUnitLabel(){ return unit==="metric" ? "L" : "US gal"; }
+
+const state = {
+  particulars:{loa:12,lbp:11,beam:3.8,depth:1.8,draft:1.2,disp:0,material:"al5083",vesselType:"power"},
+  t:{l:40,b:13,d:7,hull:"mono",type:"power"},
+  p:{lwl:10,beam:3.2,draft:1.5,hull:"power",area:"bottom",freeboardH:0.9,curve:1.05,stripeH:0.2,superArea:15,includeHighbuild:true},
+  m:{material:"al5083",l:3000,w:1500,thick:6,qty:1},
+  d:{lwl:12,beam:4,draft:1,cb:0.5,density:1.025},
+  hs:{lwl:12},
+  v:{engine:"diesel",prop:"inboard_shaft",rateMode:"direct",dist:1700,speed:10,rate:50,price:1300,admiralty:180,loa:12,beam:3.5,draft:1.2,dispRef:15,battCap:100,battDraw:20,elecPrice:150},
+  c:{fiber:"biaxial",l:3,w:1,layers:2,fabric:300},
+  pp:{pitch:19,dia:20,rpm:5400,gear:2,slip:15},
+  w:{species:"okoume",l:2440,w:1220,thick:12,qty:1},
+  a:{disp:3000,b:16,h:12,area:450},
+  im:{inch:1},
+  pw:{value:100,from:"kw",pf:0.8,voltage:220,phase:"three"},
+  bp:{loa:10,mode:"bracket",thruDia:1.5,depth:2,safety:2},
+  vt:{hp:300,genkw:0},
+  el:{load:500,hours:4,voltage:12,reserve:20}
+};
+
+let hubMode = "upload";
+let hubDemoResult = null;
+
+function renderHub(){
+  const p = state.particulars;
+  const el = document.createElement("div");
+  const uploadPane = `
+    <div class="dropzone" id="hub_drop">
+      <p>${hubDemoResult ? "" : t("hub_drop_text")}</p>
+      <div id="hub_result"></div>
+    </div>`;
+  const manualPane = `
+    <div class="row3">
+      ${fieldNum("hub_loa", t("hub_loa"), p.loa)}
+      ${fieldNum("hub_lbp", t("hub_lbp"), p.lbp)}
+      ${fieldNum("hub_beam", t("hub_beam"), p.beam)}
+    </div>
+    <div class="row3">
+      ${fieldNum("hub_depth", t("hub_depth"), p.depth)}
+      ${fieldNum("hub_draft", t("hub_draft"), p.draft)}
+      ${fieldNum("hub_disp", t("hub_disp"), p.disp)}
+    </div>
+    <div class="row2">
+      <div class="field"><label>${t("hub_material")}</label>
+        <select id="hub_material">
+          <option value="al5083" ${p.material==="al5083"?"selected":""}>Aluminum 5083</option>
+          <option value="al6061" ${p.material==="al6061"?"selected":""}>Aluminum 6061</option>
+          <option value="sts304" ${p.material==="sts304"?"selected":""}>Stainless 304</option>
+          <option value="grp" ${p.material==="grp"?"selected":""}>GRP/FRP</option>
+        </select></div>
+      <div class="field"><label>${t("hub_vesselType")}</label>
+        <select id="hub_vesselType">
+          <option value="power" ${p.vesselType==="power"?"selected":""}>Powerboat</option>
+          <option value="sail" ${p.vesselType==="sail"?"selected":""}>Sailboat</option>
+          <option value="cat" ${p.vesselType==="cat"?"selected":""}>Catamaran</option>
+        </select></div>
+    </div>`;
+  el.innerHTML = `
+  <div class="hub" id="calc-hub">
+    <h2>${t("hub_title")}</h2>
+    <p class="desc">${t("hub_desc")}</p>
+    <div class="hubtabs">
+      <button data-mode="upload" class="${hubMode==="upload"?"active":""}">${t("hub_tab_upload")}</button>
+      <button data-mode="manual" class="${hubMode==="manual"?"active":""}">${t("hub_tab_manual")}</button>
+    </div>
+    <div id="hub_pane">${hubMode==="upload" ? uploadPane : manualPane}</div>
+    <div class="applybar"><button class="btn-brass" id="hub_apply">${t("hub_apply")}</button></div>
+    <p class="applied-msg" id="hub_applied"></p>
+  </div>`;
+  const hubHost = document.getElementById("hubArea");
+  const existingHub = document.getElementById("calc-hub");
+  if(existingHub){ hubHost.replaceChild(el.firstElementChild, existingHub); }
+  else { hubHost.appendChild(el.firstElementChild); }
+
+  document.querySelectorAll("#calc-hub .hubtabs button").forEach(btn=>{
+    btn.onclick = ()=>{ hubMode = btn.getAttribute("data-mode"); renderHub(); };
+  });
+
+  if(hubMode==="upload"){
+    const drop = document.getElementById("hub_drop");
+    drop.onclick = ()=>{ const inp=document.createElement("input"); inp.type="file"; inp.accept=".pdf,.png,.jpg,.jpeg";
+      inp.onchange = e=>{ if(e.target.files[0]) simulateAnalysis(); };
+      inp.click(); };
+    drop.ondragover = e=>{ e.preventDefault(); drop.classList.add("drag"); };
+    drop.ondragleave = ()=>{ drop.classList.remove("drag"); };
+    drop.ondrop = e=>{ e.preventDefault(); drop.classList.remove("drag"); if(e.dataTransfer.files[0]) simulateAnalysis(); };
+    if(hubDemoResult) renderHubDemoResult();
+  } else {
+    const bind = (id,key,isSelect)=>{ const elx=document.getElementById(id); if(elx){
+      elx[isSelect?"onchange":"oninput"] = e=>{ p[key] = isSelect ? e.target.value : (parseFloat(e.target.value)||0); };
+    }};
+    bind("hub_loa","loa"); bind("hub_lbp","lbp"); bind("hub_beam","beam");
+    bind("hub_depth","depth"); bind("hub_draft","draft"); bind("hub_disp","disp");
+    bind("hub_material","material",true); bind("hub_vesselType","vesselType",true);
+  }
+  document.getElementById("hub_apply").onclick = applyParticulars;
+}
+
+function simulateAnalysis(){
+  const resultDiv = document.getElementById("hub_result");
+  resultDiv.innerHTML = `<p>${t("hub_analyzing")}</p>`;
+  setTimeout(()=>{
+    hubDemoResult = {loa:17.7, lbp:15.92, beam:7.546, depth:1.595, draft:0.6, disp:0, material:"al5083", vesselType:"power"};
+    Object.assign(state.particulars, hubDemoResult);
+    renderHubDemoResult();
+  }, 900);
+}
+function renderHubDemoResult(){
+  const resultDiv = document.getElementById("hub_result");
+  const p = hubDemoResult;
+  if(!resultDiv) return;
+  resultDiv.innerHTML = `
+    <span class="badge">${t("hub_demo_badge")}</span>
+    <table class="ref" style="margin-top:10px;text-align:left;">
+      <tr><th>LOA</th><td>${p.loa} m</td><th>LBP</th><td>${p.lbp} m</td></tr>
+      <tr><th>${t("hub_beam")}</th><td>${p.beam} m</td><th>${t("hub_depth")}</th><td>${p.depth} m</td></tr>
+      <tr><th>${t("hub_draft")}</th><td>${p.draft} m</td><th>-</th><td>-</td></tr>
+    </table>
+    <p class="hint">${t("hub_demo_note")}</p>`;
+}
+
+function applyParticulars(){
+  const p = state.particulars;
+  state.t.l = p.loa/0.3048; state.t.b = p.beam/0.3048; state.t.d = p.depth/0.3048;
+  state.t.hull = p.vesselType==="cat" ? "cat" : "mono";
+  state.t.type = p.vesselType==="sail" ? "sail" : "power";
+  state.d.lwl = p.lbp; state.d.beam = p.beam; state.d.draft = p.draft;
+  state.hs.lwl = p.lbp;
+  state.p.lwl = p.lbp; state.p.beam = p.beam; state.p.draft = p.draft; state.p.hull = p.vesselType;
+  state.v.loa = p.loa; state.v.beam = p.beam; state.v.draft = p.draft;
+  if(p.disp>0){ state.v.dispRef = p.disp; }
+  if(["al5083","al6061","sts304"].includes(p.material)) state.m.material = p.material;
+  renderTonnage(); renderDraft(); renderSpeed(); renderPaint(); renderVoyage(); renderMetal();
+  document.getElementById("hub_applied").textContent = t("hub_applied_msg") + " — " + t("hub_mapnote");
+}
+
+function renderTonnage(){
+  const s = state.t;
+  const el = document.createElement("div");
+  el.innerHTML = `
+  <div class="calc" id="calc-tonnage">
+    <h2>${t("t_title")}</h2>
+    <p class="desc">${t("t_desc")}</p>
+    <div class="row2">
+      <div class="field"><label>${t("t_hull")}</label>
+        <select id="t_hull"><option value="mono" ${s.hull==="mono"?"selected":""}>Monohull</option><option value="cat" ${s.hull==="cat"?"selected":""}>Catamaran</option></select></div>
+      <div class="field"><label>${t("t_type")}</label>
+        <select id="t_type"><option value="power" ${s.type==="power"?"selected":""}>Powerboat</option><option value="sail" ${s.type==="sail"?"selected":""}>Sailboat</option><option value="barge" ${s.type==="barge"?"selected":""}>Barge</option></select></div>
+    </div>
+    <div class="row3">
+      ${fieldNum("t_l", t("t_l")+" ("+lenUnitLabel()+")", ftToDisp(s.l).toFixed(2))}
+      ${fieldNum("t_b", t("t_b")+" ("+lenUnitLabel()+")", ftToDisp(s.b).toFixed(2))}
+      ${fieldNum("t_d", t("t_d")+" ("+lenUnitLabel()+")", ftToDisp(s.d).toFixed(2))}
+    </div>
+    <div class="plate">
+      <div class="item"><div class="l">${t("t_grt")}</div><div class="v" id="t_grt_out">--</div></div>
+      <div class="item"><div class="l">${t("t_nrt")}</div><div class="v" id="t_nrt_out">--</div></div>
+    </div>
+  </div>`;
+  replaceCalc("calc-tonnage", el.firstElementChild);
+  document.getElementById("t_hull").onchange = e=>{ s.hull=e.target.value; computeTonnage(); };
+  document.getElementById("t_type").onchange = e=>{ s.type=e.target.value; computeTonnage(); };
+  document.getElementById("t_l").oninput = e=>{ s.l=dispToFt(parseFloat(e.target.value)||0); computeTonnage(); };
+  document.getElementById("t_b").oninput = e=>{ s.b=dispToFt(parseFloat(e.target.value)||0); computeTonnage(); };
+  document.getElementById("t_d").oninput = e=>{ s.d=dispToFt(parseFloat(e.target.value)||0); computeTonnage(); };
+  computeTonnage();
+}
+function computeTonnage(){
+  const s = state.t;
+  const S = s.type==="sail"?0.5:(s.type==="barge"?0.84:0.67);
+  const mult = s.hull==="cat"?2:1;
+  const grt = (mult*S*s.l*s.b*s.d)/100;
+  const M = s.type==="sail"?0.9:0.8;
+  const nrt = grt*M;
+  document.getElementById("t_grt_out").textContent = grt.toFixed(1);
+  document.getElementById("t_nrt_out").textContent = nrt.toFixed(1);
+}
+
+const PAINT_SCHEMES = {
+  bottom: [
+    {key:"epoxyBarrier", nameKey:"step_epoxyBarrier", coats:3, coverage:5},
+    {key:"antifouling", nameKey:"step_antifouling", coats:2, coverage:9}
+  ],
+  topside: [
+    {key:"epoxyPrimer", nameKey:"step_epoxyPrimer", coats:2, coverage:8},
+    {key:"highbuild", nameKey:"step_highbuild", coats:1, coverage:4, optional:true},
+    {key:"urethane", nameKey:"step_urethane", coats:2, coverage:10}
+  ]
+};
+function paintAreaValue(area){
+  const s = state.p;
+  if(area==="bottom"){
+    const C = s.hull==="sail"?0.7:(s.hull==="cat"?0.65:0.75);
+    return s.lwl*s.beam*s.draft*C;
+  }
+  if(area==="hull"){ return 2*s.lwl*s.freeboardH*s.curve; }
+  if(area==="freeboard"){ return 2*s.lwl*s.stripeH; }
+  return s.superArea;
+}
+function paintSchemeFor(area){ return area==="bottom" ? PAINT_SCHEMES.bottom : PAINT_SCHEMES.topside; }
+
+function renderPaint(){
+  const s = state.p;
+  const el = document.createElement("div");
+  const dimFields = s.area==="bottom" ? `
+    <div class="row3">
+      ${fieldNum("p_lwl", t("p_lwl")+" ("+lenUnitLabel()+")", mToDisp(s.lwl).toFixed(2))}
+      ${fieldNum("p_beam", t("p_beam")+" ("+lenUnitLabel()+")", mToDisp(s.beam).toFixed(2))}
+      ${fieldNum("p_draft", t("p_draft")+" ("+lenUnitLabel()+")", mToDisp(s.draft).toFixed(2))}
+    </div>` : s.area==="hull" ? `
+    <div class="row3">
+      ${fieldNum("p_lwl", t("p_lwl")+" ("+lenUnitLabel()+")", mToDisp(s.lwl).toFixed(2))}
+      ${fieldNum("p_freeboardH", t("p_freeboardH")+" ("+lenUnitLabel()+")", mToDisp(s.freeboardH).toFixed(2))}
+      ${fieldNum("p_curve", t("p_curve"), s.curve, "0.01")}
+    </div>` : s.area==="freeboard" ? `
+    <div class="row2">
+      ${fieldNum("p_lwl", t("p_lwl")+" ("+lenUnitLabel()+")", mToDisp(s.lwl).toFixed(2))}
+      ${fieldNum("p_stripeH", t("p_stripeH")+" ("+lenUnitLabel()+")", mToDisp(s.stripeH).toFixed(2))}
+    </div>` : `
+    ${fieldNum("p_superArea", t("p_superArea")+" (m2)", s.superArea)}
+  `;
+  const highbuildToggle = s.area==="hull" || s.area==="freeboard" || s.area==="super" ? `
+    <div class="field"><label><input type="checkbox" id="p_includeHighbuild" ${s.includeHighbuild?"checked":""} style="width:auto;margin-right:6px;">${t("p_includeHighbuild")}</label></div>` : "";
+  el.innerHTML = `
+  <div class="calc" id="calc-paint">
+    <h2>${t("p_title")}</h2>
+    <p class="desc">${t("p_desc")}</p>
+    <div class="row2">
+      <div class="field"><label>${t("p_hull")}</label>
+        <select id="p_hull"><option value="sail" ${s.hull==="sail"?"selected":""}>Sailboat</option><option value="power" ${s.hull==="power"?"selected":""}>Powerboat</option><option value="cat" ${s.hull==="cat"?"selected":""}>Catamaran</option></select></div>
+      <div class="field"><label>${t("p_area")}</label>
+        <select id="p_area">
+          <option value="bottom" ${s.area==="bottom"?"selected":""}>${t("p_area_bottom")}</option>
+          <option value="hull" ${s.area==="hull"?"selected":""}>${t("p_area_hull")}</option>
+          <option value="freeboard" ${s.area==="freeboard"?"selected":""}>${t("p_area_freeboard")}</option>
+          <option value="super" ${s.area==="super"?"selected":""}>${t("p_area_super")}</option>
+        </select></div>
+    </div>
+    ${dimFields}
+    ${highbuildToggle}
+    <table class="ref" id="p_steps"></table>
+    <div class="plate"><div class="item"><div class="l">${t("p_total")}</div><div class="v" id="p_total_out">--</div></div></div>
+  </div>`;
+  replaceCalc("calc-paint", el.firstElementChild);
+  document.getElementById("p_hull").onchange = e=>{ s.hull=e.target.value; computePaint(); };
+  document.getElementById("p_area").onchange = e=>{ s.area=e.target.value; renderPaint(); };
+  const bindLen = (id, key)=>{ const elx=document.getElementById(id); if(elx) elx.oninput = e=>{ s[key]=dispToM(parseFloat(e.target.value)||0); computePaint(); }; };
+  bindLen("p_lwl","lwl"); bindLen("p_beam","beam"); bindLen("p_draft","draft");
+  bindLen("p_freeboardH","freeboardH"); bindLen("p_stripeH","stripeH");
+  const curveEl = document.getElementById("p_curve"); if(curveEl) curveEl.oninput = e=>{ s.curve=parseFloat(e.target.value)||0; computePaint(); };
+  const superEl = document.getElementById("p_superArea"); if(superEl) superEl.oninput = e=>{ s.superArea=parseFloat(e.target.value)||0; computePaint(); };
+  const hbEl = document.getElementById("p_includeHighbuild"); if(hbEl) hbEl.onchange = e=>{ s.includeHighbuild=e.target.checked; computePaint(); };
+  computePaint();
+}
+function computePaint(){
+  const s = state.p;
+  const area = paintAreaValue(s.area);
+  const scheme = paintSchemeFor(s.area);
+  const stepsTable = document.getElementById("p_steps");
+  let rows = `<tr><th>${t("p_step")}</th><th>${t("p_coats")}</th><th>${t("p_coverage")}</th><th>${t("p_liters")}</th></tr>`;
+  let total = 0;
+  scheme.forEach(step=>{
+    if(step.optional && !s.includeHighbuild) return;
+    const liters = (area*step.coats)/step.coverage;
+    total += liters;
+    rows += `<tr><td>${t(step.nameKey)}</td><td>${step.coats}</td><td>${step.coverage}</td><td>${lToDisp(liters).toFixed(1)} ${lUnitLabel()}</td></tr>`;
+  });
+  stepsTable.innerHTML = rows;
+  document.getElementById("p_total_out").textContent = lToDisp(total).toFixed(1) + " " + lUnitLabel();
+}
+
+function renderMetal(){
+  const s = state.m;
+  const el = document.createElement("div");
+  el.innerHTML = `
+  <div class="calc" id="calc-metal">
+    <h2>${t("m_title")}</h2>
+    <p class="desc">${t("m_desc")}</p>
+    <div class="field"><label>${t("m_material")}</label>
+      <select id="m_material">
+        <option value="al5083" ${s.material==="al5083"?"selected":""}>Aluminum 5083</option>
+        <option value="al6061" ${s.material==="al6061"?"selected":""}>Aluminum 6061</option>
+        <option value="sts304" ${s.material==="sts304"?"selected":""}>Stainless 304</option>
+        <option value="sts316" ${s.material==="sts316"?"selected":""}>Stainless 316</option>
+      </select></div>
+    <div class="row3">
+      ${fieldNum("m_l", t("lbl_l")+" ("+mmUnitLabel()+")", mmToDisp(s.l).toFixed(1))}
+      ${fieldNum("m_w", t("lbl_w")+" ("+mmUnitLabel()+")", mmToDisp(s.w).toFixed(1))}
+      ${fieldNum("m_t", t("lbl_t")+" ("+mmUnitLabel()+")", mmToDisp(s.thick).toFixed(2))}
+    </div>
+    ${fieldNum("m_qty", t("lbl_qty"), s.qty, "1")}
+    <div class="plate"><div class="item"><div class="l">${t("lbl_weight")}</div><div class="v" id="m_out">--</div></div></div>
+  </div>`;
+  replaceCalc("calc-metal", el.firstElementChild);
+  document.getElementById("m_material").onchange = e=>{ s.material=e.target.value; computeMetal(); };
+  document.getElementById("m_l").oninput = e=>{ s.l=dispToMm(parseFloat(e.target.value)||0); computeMetal(); };
+  document.getElementById("m_w").oninput = e=>{ s.w=dispToMm(parseFloat(e.target.value)||0); computeMetal(); };
+  document.getElementById("m_t").oninput = e=>{ s.thick=dispToMm(parseFloat(e.target.value)||0); computeMetal(); };
+  document.getElementById("m_qty").oninput = e=>{ s.qty=parseFloat(e.target.value)||0; computeMetal(); };
+  computeMetal();
+}
+function computeMetal(){
+  const s = state.m;
+  const density = {al5083:2.65, al6061:2.70, sts304:7.93, sts316:8.00}[s.material];
+  const kg = (s.l*s.w*s.thick*density/1000000)*s.qty;
+  document.getElementById("m_out").textContent = kgToDisp(kg).toFixed(1) + " " + kgUnitLabel();
+}
+
+function renderDraft(){
+  const s = state.d;
+  const el = document.createElement("div");
+  el.innerHTML = `
+  <div class="calc" id="calc-draft">
+    <h2>${t("d_title")}</h2>
+    <p class="desc">${t("d_desc")}</p>
+    <div class="row3">
+      ${fieldNum("d_lwl", t("d_lwl")+" ("+lenUnitLabel()+")", mToDisp(s.lwl).toFixed(2))}
+      ${fieldNum("d_beam", t("d_beam")+" ("+lenUnitLabel()+")", mToDisp(s.beam).toFixed(2))}
+      ${fieldNum("d_draft", t("d_draft")+" ("+lenUnitLabel()+")", mToDisp(s.draft).toFixed(2))}
+    </div>
+    <div class="row2">
+      ${fieldNum("d_cb", t("d_cb"), s.cb, "0.01")}
+      ${fieldNum("d_density", t("d_density"), s.density, "0.001")}
+    </div>
+    <div class="plate"><div class="item"><div class="l">${t("d_result")}</div><div class="v" id="d_out">--</div></div></div>
+  </div>`;
+  replaceCalc("calc-draft", el.firstElementChild);
+  document.getElementById("d_lwl").oninput = e=>{ s.lwl=dispToM(parseFloat(e.target.value)||0); computeDraft(); };
+  document.getElementById("d_beam").oninput = e=>{ s.beam=dispToM(parseFloat(e.target.value)||0); computeDraft(); };
+  document.getElementById("d_draft").oninput = e=>{ s.draft=dispToM(parseFloat(e.target.value)||0); computeDraft(); };
+  document.getElementById("d_cb").oninput = e=>{ s.cb=parseFloat(e.target.value)||0; computeDraft(); };
+  document.getElementById("d_density").oninput = e=>{ s.density=parseFloat(e.target.value)||0; computeDraft(); };
+  computeDraft();
+}
+function computeDraft(){
+  const s = state.d;
+  const disp = s.cb*s.lwl*s.beam*s.draft*s.density;
+  document.getElementById("d_out").textContent = kgToDisp(disp*1000).toFixed(0) + " " + (unit==="metric"?"kg":"lb");
+}
+
+function renderSpeed(){
+  const s = state.hs;
+  const el = document.createElement("div");
+  el.innerHTML = `
+  <div class="calc" id="calc-speed">
+    <h2>${t("hs_title")}</h2>
+    <p class="desc">${t("hs_desc")}</p>
+    ${fieldNum("hs_lwl", t("hs_lwl")+" ("+lenUnitLabel()+")", mToDisp(s.lwl).toFixed(2))}
+    <div class="plate"><div class="item"><div class="l">${t("hs_result")}</div><div class="v" id="hs_out">--</div></div></div>
+  </div>`;
+  replaceCalc("calc-speed", el.firstElementChild);
+  document.getElementById("hs_lwl").oninput = e=>{ s.lwl=dispToM(parseFloat(e.target.value)||0); computeSpeed(); };
+  computeSpeed();
+}
+function computeSpeed(){
+  const s = state.hs;
+  const ft = s.lwl/0.3048;
+  const knots = 1.34*Math.sqrt(ft);
+  document.getElementById("hs_out").textContent = knots.toFixed(1) + " kn";
+}
+
+function renderVoyage(){
+  const s = state.v;
+  const el = document.createElement("div");
+  const isBattery = s.engine==="battery";
+  const rateBlock = isBattery ? `
+    <div class="row3">
+      ${fieldNum("v_battCap", t("v_battCap"), s.battCap, "1")}
+      ${fieldNum("v_battDraw", t("v_battDraw"), s.battDraw, "0.5")}
+      ${fieldNum("v_elecPrice", t("v_elecPrice"), s.elecPrice, "1")}
+    </div>` : `
+    <div class="field"><label>${t("v_rateMode")}</label>
+      <select id="v_rateMode">
+        <option value="direct" ${s.rateMode==="direct"?"selected":""}>${t("v_rateMode_direct")}</option>
+        <option value="est" ${s.rateMode==="est"?"selected":""}>${t("v_rateMode_est")}</option>
+      </select></div>
+    ${s.rateMode==="direct" ? `
+    <div class="row2">
+      ${fieldNum("v_rate", t("v_rate"), s.rate, "1")}
+      ${fieldNum("v_price", t("v_price"), s.price, "10")}
+    </div>` : `
+    <div class="row2">
+      ${fieldNum("v_admiralty", t("v_admiralty"), s.admiralty, "1")}
+      ${fieldNum("v_price", t("v_price"), s.price, "10")}
+    </div>
+    <p class="hint">${t("v_estNote")}</p>`}`;
+  el.innerHTML = `
+  <div class="calc" id="calc-voyage">
+    <h2>${t("v_title")}</h2>
+    <p class="desc">${t("v_desc")}</p>
+    <div class="row2">
+      <div class="field"><label>${t("v_engine")}</label>
+        <select id="v_engine">
+          <option value="diesel" ${s.engine==="diesel"?"selected":""}>${t("engine_diesel")}</option>
+          <option value="gasoline" ${s.engine==="gasoline"?"selected":""}>${t("engine_gasoline")}</option>
+          <option value="battery" ${s.engine==="battery"?"selected":""}>${t("engine_battery")}</option>
+        </select></div>
+      <div class="field"><label>${t("v_prop")}</label>
+        <select id="v_prop">
+          <option value="outboard" ${s.prop==="outboard"?"selected":""}>${t("prop_outboard")}</option>
+          <option value="sterndrive" ${s.prop==="sterndrive"?"selected":""}>${t("prop_sterndrive")}</option>
+          <option value="inboard" ${s.prop==="inboard"?"selected":""}>${t("prop_inboard")}</option>
+          <option value="inboard_shaft" ${s.prop==="inboard_shaft"?"selected":""}>${t("prop_inboard_shaft")}</option>
+        </select></div>
+    </div>
+    <div class="row2">
+      ${fieldNum("v_dist", t("v_dist"), s.dist, "1")}
+      ${fieldNum("v_speed", t("v_speed"), s.speed, "0.5")}
+    </div>
+    ${rateBlock}
+    <p class="section-label" style="margin-top:18px;">${t("v_particulars")}</p>
+    <div class="row3">
+      ${fieldNum("v_loa", t("v_loa"), s.loa, "0.5")}
+      ${fieldNum("v_beamRef", t("p_beam"), s.beam, "0.1")}
+      ${fieldNum("v_draftRef", t("p_draft"), s.draft, "0.1")}
+    </div>
+    ${fieldNum("v_dispRef", t("v_dispRef"), s.dispRef, "1")}
+    <div class="plate">
+      <div class="item"><div class="l">${t("v_time")}</div><div class="v" id="v_time_out">--</div></div>
+      <div class="item"><div class="l">${isBattery?t("v_energy"):t("v_fuel")}</div><div class="v" id="v_fuel_out">--</div></div>
+      <div class="item"><div class="l">${t("v_cost")}</div><div class="v" id="v_cost_out">--</div></div>
+    </div>
+    <p class="hint" id="v_warn"></p>
+  </div>`;
+  replaceCalc("calc-voyage", el.firstElementChild);
+  document.getElementById("v_engine").onchange = e=>{ s.engine=e.target.value; renderVoyage(); };
+  document.getElementById("v_prop").onchange = e=>{ s.prop=e.target.value; computeVoyage(); };
+  document.getElementById("v_dist").oninput = e=>{ s.dist=parseFloat(e.target.value)||0; computeVoyage(); };
+  document.getElementById("v_speed").oninput = e=>{ s.speed=parseFloat(e.target.value)||0; computeVoyage(); };
+  const bind = (id,key,parser)=>{ const elx=document.getElementById(id); if(elx) elx.oninput = e=>{ s[key]=(parser||parseFloat)(e.target.value)||0; computeVoyage(); }; };
+  if(isBattery){
+    bind("v_battCap","battCap"); bind("v_battDraw","battDraw"); bind("v_elecPrice","elecPrice");
+  } else {
+    const modeEl = document.getElementById("v_rateMode"); if(modeEl) modeEl.onchange = e=>{ s.rateMode=e.target.value; renderVoyage(); };
+    bind("v_rate","rate"); bind("v_price","price"); bind("v_admiralty","admiralty");
+  }
+  bind("v_loa","loa"); bind("v_beamRef","beam"); bind("v_draftRef","draft"); bind("v_dispRef","dispRef");
+  computeVoyage();
+}
+function computeVoyage(){
+  const s = state.v;
+  const time = s.speed>0 ? s.dist/s.speed : 0;
+  let fuelOrEnergy = 0, cost = 0, warn = "";
+  if(s.engine==="battery"){
+    fuelOrEnergy = time*s.battDraw;
+    cost = fuelOrEnergy*s.elecPrice;
+    if(fuelOrEnergy > s.battCap) warn = t("v_warnBatt");
+    document.getElementById("v_fuel_out").textContent = fuelOrEnergy.toFixed(1) + " kWh";
+  } else {
+    let rate = s.rate;
+    if(s.rateMode==="est"){
+      const shp = s.admiralty>0 ? Math.pow(s.dispRef,2/3)*Math.pow(s.speed,3)/s.admiralty : 0;
+      const powerKw = shp*0.7457;
+      const sfc = s.engine==="gasoline" ? 0.28 : 0.21;
+      const density = s.engine==="gasoline" ? 0.74 : 0.85;
+      rate = (powerKw*sfc)/density;
+    }
+    fuelOrEnergy = time*rate;
+    cost = fuelOrEnergy*s.price;
+    document.getElementById("v_fuel_out").textContent = lToDisp(fuelOrEnergy).toFixed(0) + " " + lUnitLabel();
+  }
+  document.getElementById("v_time_out").textContent = time.toFixed(1) + " hr";
+  document.getElementById("v_cost_out").textContent = cost.toLocaleString();
+  document.getElementById("v_warn").textContent = warn;
+}
+
+function renderComposite(){
+  const s = state.c;
+  const el = document.createElement("div");
+  el.innerHTML = `
+  <div class="calc" id="calc-composite">
+    <h2>${t("c_title")}</h2>
+    <p class="desc">${t("c_desc")}</p>
+    <div class="field"><label>${t("c_fiber")}</label>
+      <select id="c_fiber">
+        <option value="csm" ${s.fiber==="csm"?"selected":""}>Chopped Strand Mat</option>
+        <option value="plain" ${s.fiber==="plain"?"selected":""}>Plain Weave</option>
+        <option value="biaxial" ${s.fiber==="biaxial"?"selected":""}>Biaxial</option>
+        <option value="roving" ${s.fiber==="roving"?"selected":""}>Woven Roving</option>
+      </select></div>
+    <div class="row3">
+      ${fieldNum("c_l", t("c_length")+" (m)", s.l)}
+      ${fieldNum("c_w", t("c_width")+" (m)", s.w)}
+      ${fieldNum("c_layers", t("c_layers"), s.layers, "1")}
+    </div>
+    ${fieldNum("c_fabric", t("c_fabric"), s.fabric, "1")}
+    <div class="plate"><div class="item"><div class="l">${t("c_result")}</div><div class="v" id="c_out">--</div></div></div>
+  </div>`;
+  replaceCalc("calc-composite", el.firstElementChild);
+  document.getElementById("c_fiber").onchange = e=>{ s.fiber=e.target.value; computeComposite(); };
+  document.getElementById("c_l").oninput = e=>{ s.l=parseFloat(e.target.value)||0; computeComposite(); };
+  document.getElementById("c_w").oninput = e=>{ s.w=parseFloat(e.target.value)||0; computeComposite(); };
+  document.getElementById("c_layers").oninput = e=>{ s.layers=parseFloat(e.target.value)||0; computeComposite(); };
+  document.getElementById("c_fabric").oninput = e=>{ s.fabric=parseFloat(e.target.value)||0; computeComposite(); };
+  computeComposite();
+}
+function computeComposite(){
+  const s = state.c;
+  const ratio = {csm:2.5, plain:1.2, biaxial:1.5, roving:2.0}[s.fiber];
+  const area = s.l*s.w*s.layers;
+  const fiberKg = area*s.fabric/1000;
+  const resinKg = fiberKg*ratio;
+  const resinL = resinKg/1.1;
+  document.getElementById("c_out").textContent = lToDisp(resinL).toFixed(1) + " " + lUnitLabel();
+}
+
+const PIPE_KS = [
+  ["15A (1/2\")",21.7],["20A (3/4\")",27.2],["25A (1\")",34.0],["32A (1-1/4\")",42.7],
+  ["40A (1-1/2\")",48.6],["50A (2\")",60.5],["65A (2-1/2\")",76.3],["80A (3\")",89.1],
+  ["100A (4\")",114.3],["150A (6\")",166.2],["200A (8\")",216.5],["250A (10\")",267.4],["300A (12\")",318.4]
+];
+const PIPE_ASME = [
+  ["1/2",21.3,2.77,3.73],["3/4",26.7,2.87,3.91],["1",33.4,3.38,4.55],["1-1/4",42.2,3.56,4.85],
+  ["1-1/2",48.3,3.68,5.08],["2",60.3,3.91,5.54],["2-1/2",73.0,5.16,7.01],["3",88.9,5.49,7.62],
+  ["4",114.3,6.02,8.56],["6",168.3,7.11,10.97],["8",219.1,8.18,12.70],["10",273.1,9.27,15.09],["12",323.9,10.31,17.48]
+];
+function renderPipe(){
+  const el = document.createElement("div");
+  el.innerHTML = `
+  <div class="calc" id="calc-pipe">
+    <h2>${t("pipe_title")}</h2>
+    <p class="desc">${t("pipe_desc")}</p>
+    <div class="row2">
+      <div class="field"><label>${t("pipe_standard")}</label>
+        <select id="pipe_standard"><option value="ks">KS/JIS</option><option value="asme">ASME (NPS)</option></select></div>
+      <div class="field"><label>${t("pipe_size")}</label><select id="pipe_size"></select></div>
+    </div>
+    <div class="plate" id="pipe_plate"></div>
+  </div>`;
+  replaceCalc("calc-pipe", el.firstElementChild);
+  document.getElementById("pipe_standard").onchange = fillPipeSizes;
+  fillPipeSizes();
+}
+function fillPipeSizes(){
+  const std = document.getElementById("pipe_standard").value;
+  const sizeSel = document.getElementById("pipe_size");
+  const list = std==="ks" ? PIPE_KS : PIPE_ASME;
+  sizeSel.innerHTML = list.map((row,i)=>`<option value="${i}">${row[0]}</option>`).join("");
+  sizeSel.onchange = renderPipeResult;
+  renderPipeResult();
+}
+function renderPipeResult(){
+  const std = document.getElementById("pipe_standard").value;
+  const idx = parseInt(document.getElementById("pipe_size").value||0);
+  const plate = document.getElementById("pipe_plate");
+  if(std==="ks"){
+    const row = PIPE_KS[idx];
+    plate.innerHTML = `<div class="item"><div class="l">${t("pipe_od")}</div><div class="v">${row[1].toFixed(1)} mm</div></div>`;
+  } else {
+    const row = PIPE_ASME[idx];
+    plate.innerHTML = `<div class="item"><div class="l">${t("pipe_od")}</div><div class="v">${row[1].toFixed(1)} mm</div></div>
+      <div class="item"><div class="l">${t("pipe_t40")}</div><div class="v">${row[2].toFixed(2)} mm</div></div>
+      <div class="item"><div class="l">${t("pipe_t80")}</div><div class="v">${row[3].toFixed(2)} mm</div></div>`;
+  }
+}
+
+function renderProp(){
+  const s = state.pp;
+  const el = document.createElement("div");
+  el.innerHTML = `
+  <div class="calc" id="calc-prop">
+    <h2>${t("pp_title")}</h2>
+    <p class="desc">${t("pp_desc")}</p>
+    <div class="row3">
+      ${fieldNum("pp_pitch", t("pp_pitch"), s.pitch)}
+      ${fieldNum("pp_dia", t("pp_dia"), s.dia)}
+      ${fieldNum("pp_rpm", t("pp_rpm"), s.rpm, "10")}
+    </div>
+    <div class="row2">
+      ${fieldNum("pp_gear", t("pp_gear"), s.gear, "0.1")}
+      ${fieldNum("pp_slip", t("pp_slip"), s.slip, "1")}
+    </div>
+    <div class="plate">
+      <div class="item"><div class="l">${t("pp_theo")}</div><div class="v" id="pp_theo_out">--</div></div>
+      <div class="item"><div class="l">${t("pp_actual")}</div><div class="v" id="pp_actual_out">--</div></div>
+    </div>
+  </div>`;
+  replaceCalc("calc-prop", el.firstElementChild);
+  document.getElementById("pp_pitch").oninput = e=>{ s.pitch=parseFloat(e.target.value)||0; computeProp(); };
+  document.getElementById("pp_dia").oninput = e=>{ s.dia=parseFloat(e.target.value)||0; computeProp(); };
+  document.getElementById("pp_rpm").oninput = e=>{ s.rpm=parseFloat(e.target.value)||0; computeProp(); };
+  document.getElementById("pp_gear").oninput = e=>{ s.gear=parseFloat(e.target.value)||0; computeProp(); };
+  document.getElementById("pp_slip").oninput = e=>{ s.slip=parseFloat(e.target.value)||0; computeProp(); };
+  computeProp();
+}
+function computeProp(){
+  const s = state.pp;
+  const theo = s.gear>0 ? (s.pitch*s.rpm)/(s.gear*1215.2) : 0;
+  const actual = theo*(1-s.slip/100);
+  document.getElementById("pp_theo_out").textContent = theo.toFixed(1) + " kn";
+  document.getElementById("pp_actual_out").textContent = actual.toFixed(1) + " kn";
+}
+
+function renderWood(){
+  const s = state.w;
+  const el = document.createElement("div");
+  el.innerHTML = `
+  <div class="calc" id="calc-wood">
+    <h2>${t("w_title")}</h2>
+    <p class="desc">${t("w_desc")}</p>
+    <div class="field"><label>${t("w_species")}</label>
+      <select id="w_species">
+        <option value="okoume" ${s.species==="okoume"?"selected":""}>Marine Plywood (Okoume)</option>
+        <option value="meranti" ${s.species==="meranti"?"selected":""}>Marine Plywood (Meranti)</option>
+        <option value="teak" ${s.species==="teak"?"selected":""}>Teak</option>
+        <option value="mahogany" ${s.species==="mahogany"?"selected":""}>Mahogany</option>
+        <option value="oak" ${s.species==="oak"?"selected":""}>Oak</option>
+        <option value="pine" ${s.species==="pine"?"selected":""}>Pine</option>
+      </select></div>
+    <div class="row3">
+      ${fieldNum("w_l", t("lbl_l")+" ("+mmUnitLabel()+")", mmToDisp(s.l).toFixed(1))}
+      ${fieldNum("w_w", t("lbl_w")+" ("+mmUnitLabel()+")", mmToDisp(s.w).toFixed(1))}
+      ${fieldNum("w_t", t("lbl_t")+" ("+mmUnitLabel()+")", mmToDisp(s.thick).toFixed(2))}
+    </div>
+    ${fieldNum("w_qty", t("lbl_qty"), s.qty, "1")}
+    <div class="plate"><div class="item"><div class="l">${t("lbl_weight")}</div><div class="v" id="w_out">--</div></div></div>
+  </div>`;
+  replaceCalc("calc-wood", el.firstElementChild);
+  document.getElementById("w_species").onchange = e=>{ s.species=e.target.value; computeWood(); };
+  document.getElementById("w_l").oninput = e=>{ s.l=dispToMm(parseFloat(e.target.value)||0); computeWood(); };
+  document.getElementById("w_w").oninput = e=>{ s.w=dispToMm(parseFloat(e.target.value)||0); computeWood(); };
+  document.getElementById("w_t").oninput = e=>{ s.thick=dispToMm(parseFloat(e.target.value)||0); computeWood(); };
+  document.getElementById("w_qty").oninput = e=>{ s.qty=parseFloat(e.target.value)||0; computeWood(); };
+  computeWood();
+}
+function computeWood(){
+  const s = state.w;
+  const density = {okoume:400, meranti:650, teak:655, mahogany:640, oak:750, pine:500}[s.species];
+  const kg = (s.l*s.w*s.thick*density/1000000000)*s.qty;
+  document.getElementById("w_out").textContent = kgToDisp(kg).toFixed(2) + " " + kgUnitLabel();
+}
+
+function renderAnchor(){
+  const s = state.a;
+  const el = document.createElement("div");
+  el.innerHTML = `
+  <div class="calc" id="calc-anchor">
+    <h2>${t("a_title")}</h2>
+    <p class="desc">${t("a_desc")}</p>
+    <div class="row3">
+      ${fieldNum("a_disp", t("a_disp"), s.disp, "10")}
+      ${fieldNum("a_b", t("a_b"), s.b, "0.5")}
+      ${fieldNum("a_h", t("a_h"), s.h, "0.5")}
+    </div>
+    ${fieldNum("a_area", t("a_a"), s.area, "10")}
+    <div class="plate"><div class="item"><div class="l">${t("a_en")}</div><div class="v" id="a_out">--</div></div></div>
+    <p class="hint">${t("a_note")}</p>
+  </div>`;
+  replaceCalc("calc-anchor", el.firstElementChild);
+  document.getElementById("a_disp").oninput = e=>{ s.disp=parseFloat(e.target.value)||0; computeAnchor(); };
+  document.getElementById("a_b").oninput = e=>{ s.b=parseFloat(e.target.value)||0; computeAnchor(); };
+  document.getElementById("a_h").oninput = e=>{ s.h=parseFloat(e.target.value)||0; computeAnchor(); };
+  document.getElementById("a_area").oninput = e=>{ s.area=parseFloat(e.target.value)||0; computeAnchor(); };
+  computeAnchor();
+}
+function computeAnchor(){
+  const s = state.a;
+  const en = Math.pow(s.disp,2/3) + 2*s.b*s.h + 0.1*s.area;
+  document.getElementById("a_out").textContent = en.toFixed(0);
+}
+
+function renderConvert(){
+  const s = state.im;
+  const el = document.createElement("div");
+  el.innerHTML = `
+  <div class="calc" id="calc-convert">
+    <h2>${t("im_title")}</h2>
+    <p class="desc">${t("im_desc")}</p>
+    <div class="row2">
+      ${fieldNum("im_inch", t("im_inch"), s.inch)}
+      ${fieldNum("im_mm", t("im_mm"), (s.inch*25.4).toFixed(2))}
+    </div>
+  </div>`;
+  replaceCalc("calc-convert", el.firstElementChild);
+  document.getElementById("im_inch").oninput = e=>{
+    s.inch = parseFloat(e.target.value)||0;
+    document.getElementById("im_mm").value = (s.inch*25.4).toFixed(2);
+  };
+  document.getElementById("im_mm").oninput = e=>{
+    const mm = parseFloat(e.target.value)||0;
+    s.inch = mm/25.4;
+    document.getElementById("im_inch").value = s.inch.toFixed(4);
+  };
+}
+
+function renderPower(){
+  const s = state.pw;
+  const el = document.createElement("div");
+  el.innerHTML = `
+  <div class="calc" id="calc-power">
+    <h2>${t("pw_title")}</h2>
+    <p class="desc">${t("pw_desc")}</p>
+    <div class="row2">
+      ${fieldNum("pw_value", t("pw_value"), s.value)}
+      <div class="field"><label>${t("pw_from")}</label>
+        <select id="pw_from">
+          <option value="kw" ${s.from==="kw"?"selected":""}>kW</option>
+          <option value="ps" ${s.from==="ps"?"selected":""}>PS</option>
+          <option value="hp" ${s.from==="hp"?"selected":""}>HP</option>
+        </select></div>
+    </div>
+    <table class="ref" id="pw_table"></table>
+    <p class="section-label" style="margin-top:18px;">${t("pw_kva_title")}</p>
+    <div class="row3">
+      ${fieldNum("pw_pf", t("pw_pf"), s.pf, "0.01")}
+      ${fieldNum("pw_voltage", t("pw_voltage"), s.voltage, "1")}
+      <div class="field"><label>${t("pw_phase")}</label>
+        <select id="pw_phase"><option value="single" ${s.phase==="single"?"selected":""}>${t("pw_single")}</option><option value="three" ${s.phase==="three"?"selected":""}>${t("pw_three")}</option></select></div>
+    </div>
+    <div class="plate">
+      <div class="item"><div class="l">${t("pw_kw_out")}</div><div class="v" id="pw_kw_out">--</div></div>
+      <div class="item"><div class="l">${t("pw_amp_out")}</div><div class="v" id="pw_amp_out">--</div></div>
+    </div>
+  </div>`;
+  replaceCalc("calc-power", el.firstElementChild);
+  const bind = (id,key,parser)=>{ document.getElementById(id).oninput = e=>{ s[key]=(parser||parseFloat)(e.target.value)||0; computePower(); }; };
+  bind("pw_value","value");
+  document.getElementById("pw_from").onchange = e=>{ s.from=e.target.value; computePower(); };
+  bind("pw_pf","pf"); bind("pw_voltage","voltage");
+  document.getElementById("pw_phase").onchange = e=>{ s.phase=e.target.value; computePower(); };
+  computePower();
+}
+function computePower(){
+  const s = state.pw;
+  let kw;
+  if(s.from==="kw") kw = s.value;
+  else if(s.from==="ps") kw = s.value*0.735499;
+  else kw = s.value*0.745700;
+  const ps = kw/0.735499;
+  const hp = kw/0.745700;
+  document.getElementById("pw_table").innerHTML =
+    `<tr><th>kW</th><th>PS</th><th>HP</th></tr><tr><td>${kw.toFixed(2)}</td><td>${ps.toFixed(2)}</td><td>${hp.toFixed(2)}</td></tr>`;
+  const kva = kw>0 && s.pf>0 ? kw/s.pf : 0;
+  document.getElementById("pw_kw_out").textContent = kva.toFixed(2) + " kVA";
+  let amp;
+  if(s.phase==="three") amp = s.voltage>0 ? (kva*1000)/(Math.sqrt(3)*s.voltage) : 0;
+  else amp = s.voltage>0 ? (kva*1000)/s.voltage : 0;
+  document.getElementById("pw_amp_out").textContent = amp.toFixed(1) + " A";
+}
+
+function renderBilge(){
+  const s = state.bp;
+  const el = document.createElement("div");
+  const modeFields = s.mode==="bracket" ? `
+    ${fieldNum("bp_loa", t("bp_loa")+" ("+lenUnitLabel()+")", mToDisp(s.loa).toFixed(2))}` : `
+    <div class="row3">
+      ${fieldNum("bp_thruDia", t("bp_thruDia"), s.thruDia, "0.1")}
+      ${fieldNum("bp_depth", t("bp_depth")+" ("+lenUnitLabel()+")", mToDisp(s.depth).toFixed(2))}
+      ${fieldNum("bp_safety", t("bp_safety"), s.safety, "0.1")}
+    </div>`;
+  el.innerHTML = `
+  <div class="calc" id="calc-bilge">
+    <h2>${t("bp_title")}</h2>
+    <p class="desc">${t("bp_desc")}</p>
+    <div class="field"><label>${t("bp_mode")}</label>
+      <select id="bp_mode">
+        <option value="bracket" ${s.mode==="bracket"?"selected":""}>${t("bp_mode_bracket")}</option>
+        <option value="ingress" ${s.mode==="ingress"?"selected":""}>${t("bp_mode_ingress")}</option>
+      </select></div>
+    ${modeFields}
+    <div class="plate"><div class="item"><div class="l">${t("bp_result")}</div><div class="v" id="bp_out">--</div></div></div>
+    <p class="hint">${t("bp_note")}</p>
+  </div>`;
+  replaceCalc("calc-bilge", el.firstElementChild);
+  document.getElementById("bp_mode").onchange = e=>{ s.mode=e.target.value; renderBilge(); };
+  if(s.mode==="bracket"){
+    document.getElementById("bp_loa").oninput = e=>{ s.loa=dispToM(parseFloat(e.target.value)||0); computeBilge(); };
+  } else {
+    document.getElementById("bp_thruDia").oninput = e=>{ s.thruDia=parseFloat(e.target.value)||0; computeBilge(); };
+    document.getElementById("bp_depth").oninput = e=>{ s.depth=dispToM(parseFloat(e.target.value)||0); computeBilge(); };
+    document.getElementById("bp_safety").oninput = e=>{ s.safety=parseFloat(e.target.value)||0; computeBilge(); };
+  }
+  computeBilge();
+}
+function computeBilge(){
+  const s = state.bp;
+  let gph;
+  if(s.mode==="bracket"){
+    const ft = s.loa/0.3048;
+    if(ft<20) gph = 1000; else if(ft<26) gph = 1500; else if(ft<32) gph = 2500;
+    else if(ft<36) gph = 4000; else if(ft<45) gph = 6000; else gph = 8500;
+  } else {
+    const diaFt = (s.thruDia/12);
+    const areaSqft = Math.PI*Math.pow(diaFt/2,2);
+    const depthFt = s.depth/0.3048;
+    const velocity = Math.sqrt(2*32.174*depthFt);
+    const cfs = 0.61*areaSqft*velocity;
+    const gphIngress = cfs*3600*7.48;
+    gph = gphIngress*s.safety;
+  }
+  const lph = gph*3.78541;
+  document.getElementById("bp_out").textContent = gph.toFixed(0) + " GPH (" + lph.toFixed(0) + " L/hr)";
+}
+
+function renderVent(){
+  const s = state.vt;
+  const el = document.createElement("div");
+  el.innerHTML = `
+  <div class="calc" id="calc-vent">
+    <h2>${t("vt_title")}</h2>
+    <p class="desc">${t("vt_desc")}</p>
+    <div class="row2">
+      ${fieldNum("vt_hp", t("vt_hp"), s.hp, "10")}
+      ${fieldNum("vt_genkw", t("vt_genkw"), s.genkw, "0.5")}
+    </div>
+    <div class="plate">
+      <div class="item"><div class="l">${t("vt_area_out")}</div><div class="v" id="vt_area_out">--</div></div>
+      <div class="item"><div class="l">${t("vt_cfm_out")}</div><div class="v" id="vt_cfm_out">--</div></div>
+    </div>
+    <p class="hint">${t("vt_note")}</p>
+  </div>`;
+  replaceCalc("calc-vent", el.firstElementChild);
+  document.getElementById("vt_hp").oninput = e=>{ s.hp=parseFloat(e.target.value)||0; computeVent(); };
+  document.getElementById("vt_genkw").oninput = e=>{ s.genkw=parseFloat(e.target.value)||0; computeVent(); };
+  computeVent();
+}
+function computeVent(){
+  const s = state.vt;
+  const totalHp = s.hp + s.genkw*2;
+  const areaSqIn = totalHp/3.3;
+  const cfm = Math.max(0, (2.75*totalHp)-90);
+  document.getElementById("vt_area_out").textContent = areaSqIn.toFixed(1) + " in2";
+  document.getElementById("vt_cfm_out").textContent = cfm.toFixed(0) + " CFM";
+}
+
+function renderElectric(){
+  const s = state.el;
+  const el = document.createElement("div");
+  el.innerHTML = `
+  <div class="calc" id="calc-electric">
+    <h2>${t("el_title")}</h2>
+    <p class="desc">${t("el_desc")}</p>
+    <div class="row2">
+      ${fieldNum("el_load", t("el_load"), s.load, "10")}
+      ${fieldNum("el_hours", t("el_hours"), s.hours, "0.5")}
+    </div>
+    <div class="row2">
+      ${fieldNum("el_voltage", t("el_voltage"), s.voltage, "1")}
+      ${fieldNum("el_reserve", t("el_reserve"), s.reserve, "5")}
+    </div>
+    <div class="plate">
+      <div class="item"><div class="l">${t("el_wh_out")}</div><div class="v" id="el_wh_out">--</div></div>
+      <div class="item"><div class="l">${t("el_ah_out")}</div><div class="v" id="el_ah_out">--</div></div>
+    </div>
+  </div>`;
+  replaceCalc("calc-electric", el.firstElementChild);
+  const bind = (id,key)=>{ document.getElementById(id).oninput = e=>{ s[key]=parseFloat(e.target.value)||0; computeElectric(); }; };
+  bind("el_load","load"); bind("el_hours","hours"); bind("el_voltage","voltage"); bind("el_reserve","reserve");
+  computeElectric();
+}
+function computeElectric(){
+  const s = state.el;
+  const wh = s.load*s.hours;
+  const ahBase = s.voltage>0 ? wh/s.voltage : 0;
+  const ah = ahBase*(1+s.reserve/100);
+  document.getElementById("el_wh_out").textContent = wh.toFixed(0) + " Wh";
+  document.getElementById("el_ah_out").textContent = ah.toFixed(1) + " Ah";
+}
+
+applyI18n();
+</script>
+</body>
+</html>
